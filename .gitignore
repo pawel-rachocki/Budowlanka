@@ -60,5 +60,5 @@ secrets/
 # ========================
 # Claude Code
 # ========================
-.claude/
+.claude/settings.local.json
 .mcp.json
