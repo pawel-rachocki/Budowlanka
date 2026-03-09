@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:17
     container_name: budowlanka_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: budowlanka
       POSTGRES_USER: budowlanka
@@ -10,6 +11,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budowlanka -d budowlanka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   minio:
     image: minio/minio
