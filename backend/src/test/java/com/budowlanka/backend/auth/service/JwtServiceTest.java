@@ -146,6 +146,23 @@ class JwtServiceTest {
   }
 
   @Test
+  void should_returnFalse_when_tokenHasWrongIssuer() throws Exception {
+    Instant now = Instant.now();
+    JWTClaimsSet claims =
+        new JWTClaimsSet.Builder()
+            .subject(user.getEmail())
+            .issuer("wrong-issuer")
+            .issueTime(Date.from(now))
+            .expirationTime(Date.from(now.plusSeconds(3600)))
+            .claim("type", "access")
+            .build();
+    SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
+    jwt.sign(new MACSigner(SECRET.getBytes(StandardCharsets.UTF_8)));
+
+    assertThat(jwtService.validateToken(jwt.serialize())).isFalse();
+  }
+
+  @Test
   void should_returnTrue_when_validateAccessTokenWithAccessToken() {
     String token = jwtService.generateAccessToken(user);
     assertThat(jwtService.validateAccessToken(token)).isTrue();

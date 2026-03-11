@@ -8,7 +8,6 @@ import lombok.*;
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +27,7 @@ public class RefreshToken {
   @Column(nullable = false)
   private Instant expiresAt;
 
+  @Builder.Default
   @Column(nullable = false)
   private boolean revoked = false;
 
@@ -37,5 +37,9 @@ public class RefreshToken {
   @PrePersist
   protected void onCreate() {
     createdAt = Instant.now();
+  }
+
+  public void revoke() {
+    this.revoked = true;
   }
 }

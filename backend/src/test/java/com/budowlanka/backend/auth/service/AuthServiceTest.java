@@ -1,11 +1,11 @@
 package com.budowlanka.backend.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
-import com.budowlanka.backend.auth.exception.DuplicateEmailException;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
@@ -32,7 +31,7 @@ class AuthServiceTest {
 
   private static final String BASE_URL = "http://localhost:8080";
   private static final String EMAIL = "test@example.com";
-  private static final String PASSWORD = "haslo1234";
+  private static final String PASSWORD = "Haslo123!";
 
   @Mock private UserRepository userRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
@@ -86,17 +85,40 @@ class AuthServiceTest {
 
     authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT));
 
-    verify(emailService)
-        .sendVerificationEmail(eq(EMAIL), contains(BASE_URL + "/api/auth/verify?token="));
+    ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
+    verify(emailService).sendVerificationEmail(eq(EMAIL), linkCaptor.capture());
+    assertThat(linkCaptor.getValue()).contains(BASE_URL + "/api/auth/verify?token=");
   }
 
   @Test
-  void should_throwDuplicateEmailException_when_emailAlreadyExists() {
+  void should_storeHashedTokenInDb_when_registering() {
+    when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(PASSWORD)).thenReturn("hashed");
+
+    authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT));
+
+    ArgumentCaptor<User> userCaptor = forClass(User.class);
+    ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
+    verify(userRepository).save(userCaptor.capture());
+    verify(emailService).sendVerificationEmail(eq(EMAIL), linkCaptor.capture());
+
+    String link = linkCaptor.getValue();
+    String plainToken = link.substring(link.indexOf("token=") + 6);
+    String storedToken = userCaptor.getValue().getVerificationToken();
+
+    // DB stores SHA-256 hash, email link carries plain token
+    assertThat(storedToken).isEqualTo(AuthService.hashToken(plainToken));
+    assertThat(storedToken).isNotEqualTo(plainToken);
+  }
+
+  @Test
+  void should_notSaveUser_when_emailAlreadyExists() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(new User()));
 
-    assertThatThrownBy(
-            () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT)))
-        .isInstanceOf(DuplicateEmailException.class);
+    // Anti-enumeration: no exception thrown, caller cannot tell if email existed
+    assertThatNoException()
+        .isThrownBy(
+            () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT)));
 
     verify(userRepository, never()).save(any());
     verify(emailService, never()).sendVerificationEmail(anyString(), anyString());
@@ -148,19 +170,11 @@ class AuthServiceTest {
 
     authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT));
 
-    ArgumentCaptor<User> captor = forClass(User.class);
-    verify(userRepository).save(captor.capture());
-    assertThat(captor.getValue().getVerificationToken()).matches("^[A-Za-z0-9_-]{64}$");
-  }
+    ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
+    verify(emailService).sendVerificationEmail(eq(EMAIL), linkCaptor.capture());
 
-  @Test
-  void should_notSendEmail_when_duplicateEmailThrown() {
-    when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(new User()));
-
-    assertThatThrownBy(
-            () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT)))
-        .isInstanceOf(DuplicateEmailException.class);
-
-    verify(emailService, never()).sendVerificationEmail(anyString(), anyString());
+    String link = linkCaptor.getValue();
+    String plainToken = link.substring(link.indexOf("token=") + 6);
+    assertThat(plainToken).matches("^[A-Za-z0-9_-]{64}$");
   }
 }

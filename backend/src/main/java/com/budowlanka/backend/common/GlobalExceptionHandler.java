@@ -1,6 +1,5 @@
 package com.budowlanka.backend.common;
 
-import com.budowlanka.backend.auth.exception.DuplicateEmailException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,17 +22,11 @@ public class GlobalExceptionHandler {
     return ApiError.validationError(errors);
   }
 
-  @ExceptionHandler(DuplicateEmailException.class)
-  @ResponseStatus(HttpStatus.CONFLICT)
-  public ApiError handleDuplicateEmail(DuplicateEmailException ex) {
-    log.warn("Duplicate email registration attempt: {}", ex.getMessage());
-    return ApiError.conflict("Podany adres email jest już zarejestrowany.");
-  }
-
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleIllegalArgument(IllegalArgumentException ex) {
-    return ApiError.of(400, ex.getMessage());
+    log.warn("Illegal argument: {}", ex.getMessage());
+    return ApiError.of(400, "Nieprawidłowe żądanie.");
   }
 
   @ExceptionHandler(Exception.class)

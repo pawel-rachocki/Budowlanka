@@ -6,12 +6,12 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,11 +23,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@NullMarked
 public class User implements UserDetails {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Setter(AccessLevel.NONE)
   private UUID id;
 
   @Column(nullable = false, unique = true, length = 255)
@@ -40,9 +40,11 @@ public class User implements UserDetails {
   @Column(nullable = false, length = 20)
   private UserRole role;
 
+  @Builder.Default
   @Column(name = "email_verified", nullable = false)
   private boolean emailVerified = false;
 
+  // Stores SHA-256 hash of the plain token sent in the verification email link
   @Column(name = "verification_token", length = 128)
   private String verificationToken;
 

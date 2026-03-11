@@ -16,7 +16,7 @@ public class EmailService {
 
   private final JavaMailSender mailSender;
 
-  @Async
+  @Async("taskExecutor")
   public void sendVerificationEmail(String toEmail, String verificationLink) {
     try {
       MimeMessage message = mailSender.createMimeMessage();
@@ -26,9 +26,9 @@ public class EmailService {
       helper.setFrom("noreply@budowlanka.pl");
       helper.setText(buildTextBody(verificationLink), buildHtmlBody(verificationLink));
       mailSender.send(message);
-      log.info("Verification email sent to {}", toEmail);
+      log.info("Verification email sent successfully");
     } catch (MessagingException e) {
-      log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage());
+      log.error("Failed to send verification email: {}", e.getMessage());
     }
   }
 

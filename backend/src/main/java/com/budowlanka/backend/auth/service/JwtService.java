@@ -77,6 +77,7 @@ public class JwtService {
       JWTClaimsSet claims = jwt.getJWTClaimsSet();
       Date expiration = claims.getExpirationTime();
       if (expiration == null || !expiration.after(Date.from(Instant.now()))) return false;
+      if (!ISSUER.equals(claims.getIssuer())) return false;
       if (expectedType != null && !expectedType.equals(claims.getStringClaim("type"))) return false;
       return true;
     } catch (ParseException | JOSEException e) {

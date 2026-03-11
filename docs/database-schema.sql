@@ -19,8 +19,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE refresh_tokens (
-    id         BIGSERIAL    PRIMARY KEY,
-    user_id    BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token      VARCHAR(512) NOT NULL UNIQUE,
     expires_at TIMESTAMPTZ  NOT NULL,
     revoked    BOOLEAN      NOT NULL DEFAULT FALSE,
@@ -34,7 +34,7 @@ CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
 
 CREATE TABLE crew_profiles (
     id                BIGSERIAL    PRIMARY KEY,
-    user_id           BIGINT       NOT NULL UNIQUE REFERENCES users(id),
+    user_id           UUID         NOT NULL UNIQUE REFERENCES users(id),
     company_name      VARCHAR(255) NOT NULL,
     slug              VARCHAR(255) NOT NULL UNIQUE,
     description       TEXT,
@@ -93,7 +93,7 @@ CREATE INDEX idx_photos_moderation ON portfolio_photos(moderation_status);
 CREATE TABLE reviews (
     id              BIGSERIAL   PRIMARY KEY,
     crew_profile_id BIGINT      NOT NULL REFERENCES crew_profiles(id),
-    author_user_id  BIGINT      NOT NULL REFERENCES users(id),
+    author_user_id  UUID        NOT NULL REFERENCES users(id),
     rating          SMALLINT    NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment         TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -163,8 +163,8 @@ CREATE TABLE payments (
 
 CREATE TABLE conversations (
     id             BIGSERIAL   PRIMARY KEY,
-    client_user_id BIGINT      NOT NULL REFERENCES users(id),
-    crew_user_id   BIGINT      NOT NULL REFERENCES users(id),
+    client_user_id UUID        NOT NULL REFERENCES users(id),
+    crew_user_id   UUID        NOT NULL REFERENCES users(id),
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(client_user_id, crew_user_id)
 );
@@ -172,7 +172,7 @@ CREATE TABLE conversations (
 CREATE TABLE messages (
     id              BIGSERIAL   PRIMARY KEY,
     conversation_id BIGINT      NOT NULL REFERENCES conversations(id),
-    sender_user_id  BIGINT      NOT NULL REFERENCES users(id),
+    sender_user_id  UUID        NOT NULL REFERENCES users(id),
     content         TEXT        NOT NULL,
     is_read         BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
