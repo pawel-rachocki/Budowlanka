@@ -35,6 +35,26 @@ public class AuthService {
   private final AppProperties appProperties;
 
   @Transactional
+  public void verifyEmail(String plainToken) {
+    String hashedToken = hashToken(plainToken);
+    User user =
+        userRepository
+            .findByVerificationToken(hashedToken)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Token weryfikacyjny jest nieprawidłowy."));
+
+    if (user.getTokenExpiresAt() == null || Instant.now().isAfter(user.getTokenExpiresAt())) {
+      throw new IllegalArgumentException("Token weryfikacyjny wygasł.");
+    }
+
+    user.setEmailVerified(true);
+    user.setVerificationToken(null);
+    user.setTokenExpiresAt(null);
+    userRepository.save(user);
+    log.info("Email verified for user id={}", user.getId());
+  }
+
+  @Transactional
   public void register(RegisterRequest request) {
     if (request.role() == UserRole.ADMIN) {
       throw new IllegalArgumentException("Rola ADMIN nie może być wybrana podczas rejestracji.");
