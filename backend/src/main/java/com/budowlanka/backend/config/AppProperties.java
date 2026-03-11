@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties("app")
 @Validated
-public record AppProperties(@Valid JwtProperties jwt) {
+public record AppProperties(@Valid JwtProperties jwt, @NotBlank String baseUrl) {
 
   public record JwtProperties(
       @NotBlank @Size(min = 32) String secret,
