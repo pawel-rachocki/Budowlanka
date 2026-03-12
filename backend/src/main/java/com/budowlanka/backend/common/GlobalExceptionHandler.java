@@ -3,6 +3,8 @@ package com.budowlanka.backend.common;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -20,6 +22,18 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .toList();
     return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(DisabledException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ApiError handleDisabled(DisabledException ex) {
+    return ApiError.of(401, "Email niezweryfikowany. Sprawdź skrzynkę pocztową.");
+  }
+
+  @ExceptionHandler(BadCredentialsException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ApiError handleBadCredentials(BadCredentialsException ex) {
+    return ApiError.of(401, "Nieprawidłowy email lub hasło.");
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

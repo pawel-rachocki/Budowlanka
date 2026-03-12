@@ -1,5 +1,7 @@
 package com.budowlanka.backend.auth.controller;
 
+import com.budowlanka.backend.auth.dto.LoginRequest;
+import com.budowlanka.backend.auth.dto.LoginResponse;
 import com.budowlanka.backend.auth.dto.MessageResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.service.AuthService;
@@ -30,6 +32,11 @@ public class AuthController {
   public MessageResponse register(@Valid @RequestBody RegisterRequest request) {
     authService.register(request);
     return new MessageResponse("Rejestracja udana. Sprawdź email, aby aktywować konto.");
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    return ResponseEntity.ok(authService.login(request));
   }
 
   @GetMapping("/verify")

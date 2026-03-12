@@ -1,13 +1,13 @@
 package com.budowlanka.backend.auth.service;
 
+import com.budowlanka.backend.auth.dto.LoginRequest;
+import com.budowlanka.backend.auth.dto.LoginResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
+import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -15,6 +15,9 @@ import java.util.Base64;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,15 +36,30 @@ public class AuthService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final EmailService emailService;
   private final AppProperties appProperties;
+  private final AuthenticationManager authenticationManager;
+  private final TokenService tokenService;
+
+  @Transactional
+  public LoginResponse login(LoginRequest request) {
+    String email = request.email().toLowerCase(Locale.ROOT);
+    Authentication auth =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(email, request.password()));
+    User user = (User) auth.getPrincipal();
+    log.info("User logged in id={}", user.getId());
+    return tokenService.issueTokenPair(user);
+  }
 
   @Transactional
   public void verifyEmail(String plainToken) {
-    String hashedToken = hashToken(plainToken);
+    String hashedToken = TokenHashUtils.hash(plainToken);
     User user =
         userRepository
             .findByVerificationToken(hashedToken)
             .orElseThrow(
                 () -> new IllegalArgumentException("Token weryfikacyjny jest nieprawidłowy."));
+
+    if (user.isEmailVerified()) return;
 
     if (user.getTokenExpiresAt() == null || Instant.now().isAfter(user.getTokenExpiresAt())) {
       throw new IllegalArgumentException("Token weryfikacyjny wygasł.");
@@ -76,7 +94,8 @@ public class AuthService {
             .passwordHash(passwordEncoder.encode(request.password()))
             .role(request.role())
             .emailVerified(false)
-            .verificationToken(hashToken(plainToken)) // store SHA-256 hash, not plain token
+            .verificationToken(
+                TokenHashUtils.hash(plainToken)) // store SHA-256 hash, not plain token
             .tokenExpiresAt(Instant.now().plus(TOKEN_VALIDITY_HOURS, ChronoUnit.HOURS))
             .build();
 
@@ -91,15 +110,5 @@ public class AuthService {
     byte[] bytes = new byte[TOKEN_BYTES];
     SECURE_RANDOM.nextBytes(bytes);
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-  }
-
-  static String hashToken(String token) {
-    try {
-      byte[] hash =
-          MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
-      return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("SHA-256 not available", e);
-    }
   }
 }

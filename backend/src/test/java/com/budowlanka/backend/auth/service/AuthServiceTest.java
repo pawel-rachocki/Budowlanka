@@ -15,6 +15,7 @@ import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
+import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +38,8 @@ class AuthServiceTest {
   @Mock private UserRepository userRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
   @Mock private EmailService emailService;
+  @Mock private AuthenticationManager authenticationManager;
+  @Mock private TokenService tokenService;
 
   private AuthService authService;
 
@@ -46,7 +50,14 @@ class AuthServiceTest {
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
             BASE_URL);
-    authService = new AuthService(userRepository, passwordEncoder, emailService, props);
+    authService =
+        new AuthService(
+            userRepository,
+            passwordEncoder,
+            emailService,
+            props,
+            authenticationManager,
+            tokenService);
   }
 
   @Test
@@ -107,7 +118,7 @@ class AuthServiceTest {
     String storedToken = userCaptor.getValue().getVerificationToken();
 
     // DB stores SHA-256 hash, email link carries plain token
-    assertThat(storedToken).isEqualTo(AuthService.hashToken(plainToken));
+    assertThat(storedToken).isEqualTo(TokenHashUtils.hash(plainToken));
     assertThat(storedToken).isNotEqualTo(plainToken);
   }
 

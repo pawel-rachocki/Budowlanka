@@ -3,12 +3,15 @@ package com.budowlanka.backend.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
+import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -19,17 +22,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceVerifyEmailTest {
 
   private static final String PLAIN_TOKEN = "testPlainTokenForVerification123456789012345";
-  private static final String HASHED_TOKEN = AuthService.hashToken(PLAIN_TOKEN);
+  private static final String HASHED_TOKEN = TokenHashUtils.hash(PLAIN_TOKEN);
 
   @Mock private UserRepository userRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
   @Mock private EmailService emailService;
+  @Mock private AuthenticationManager authenticationManager;
+  @Mock private TokenService tokenService;
 
   private AuthService authService;
 
@@ -40,7 +46,14 @@ class AuthServiceVerifyEmailTest {
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
             "http://localhost:8080");
-    authService = new AuthService(userRepository, passwordEncoder, emailService, props);
+    authService =
+        new AuthService(
+            userRepository,
+            passwordEncoder,
+            emailService,
+            props,
+            authenticationManager,
+            tokenService);
   }
 
   @Test
@@ -91,6 +104,24 @@ class AuthServiceVerifyEmailTest {
     assertThatThrownBy(() -> authService.verifyEmail(PLAIN_TOKEN))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("wygasł");
+  }
+
+  @Test
+  void should_notSave_when_emailAlreadyVerified() {
+    User user =
+        User.builder()
+            .email("test@example.com")
+            .passwordHash("hash")
+            .role(UserRole.CLIENT)
+            .emailVerified(true)
+            .verificationToken(HASHED_TOKEN)
+            .tokenExpiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+            .build();
+    when(userRepository.findByVerificationToken(HASHED_TOKEN)).thenReturn(Optional.of(user));
+
+    authService.verifyEmail(PLAIN_TOKEN);
+
+    verify(userRepository, never()).save(any());
   }
 
   @Test
