@@ -3,12 +3,14 @@ package com.budowlanka.backend.common;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 @Slf4j
@@ -41,6 +43,18 @@ public class GlobalExceptionHandler {
   public ApiError handleIllegalArgument(IllegalArgumentException ex) {
     log.warn("Illegal argument: {}", ex.getMessage());
     return ApiError.of(400, "Nieprawidłowe żądanie.");
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex) {
+    int status = ex.getStatusCode().value();
+    if (status >= 500) {
+      log.error("ResponseStatusException: {}", ex.getReason(), ex);
+    } else if (status == 401 || status == 403) {
+      log.debug("Auth failure ({}): {}", status, ex.getReason());
+    }
+    String message = ex.getReason() != null ? ex.getReason() : "Błąd żądania.";
+    return ResponseEntity.status(status).body(ApiError.of(status, message));
   }
 
   @ExceptionHandler(Exception.class)

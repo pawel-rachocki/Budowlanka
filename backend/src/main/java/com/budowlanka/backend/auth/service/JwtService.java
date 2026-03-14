@@ -57,6 +57,10 @@ public class JwtService {
     return validateTokenWithType(token, "access");
   }
 
+  public boolean validateRefreshToken(String token) {
+    return validateTokenWithType(token, "refresh");
+  }
+
   public String extractUsername(String token) {
     try {
       SignedJWT jwt = SignedJWT.parse(token);

@@ -3,6 +3,8 @@ package com.budowlanka.backend.auth.controller;
 import com.budowlanka.backend.auth.dto.LoginRequest;
 import com.budowlanka.backend.auth.dto.LoginResponse;
 import com.budowlanka.backend.auth.dto.MessageResponse;
+import com.budowlanka.backend.auth.dto.RefreshRequest;
+import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -37,6 +39,11 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.login(request));
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<RefreshResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+    return ResponseEntity.ok(authService.refreshToken(request.refreshToken()));
   }
 
   @GetMapping("/verify")

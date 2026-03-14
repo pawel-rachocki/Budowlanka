@@ -2,6 +2,7 @@ package com.budowlanka.backend.auth.service;
 
 import com.budowlanka.backend.auth.dto.LoginRequest;
 import com.budowlanka.backend.auth.dto.LoginResponse;
+import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
@@ -104,6 +105,10 @@ public class AuthService {
 
     String verificationLink = appProperties.baseUrl() + "/api/auth/verify?token=" + plainToken;
     emailService.sendVerificationEmail(email, verificationLink);
+  }
+
+  public RefreshResponse refreshToken(String plainRefreshToken) {
+    return tokenService.refreshToken(plainRefreshToken);
   }
 
   private static String generatePlainToken() {
