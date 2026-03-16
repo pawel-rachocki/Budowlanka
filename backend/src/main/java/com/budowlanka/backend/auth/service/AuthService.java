@@ -107,8 +107,14 @@ public class AuthService {
     emailService.sendVerificationEmail(email, verificationLink);
   }
 
+  @Transactional(readOnly = true)
   public RefreshResponse refreshToken(String plainRefreshToken) {
     return tokenService.refreshToken(plainRefreshToken);
+  }
+
+  @Transactional
+  public void logout(User user) {
+    tokenService.logout(user);
   }
 
   private static String generatePlainToken() {

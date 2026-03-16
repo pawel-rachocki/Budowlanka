@@ -52,6 +52,7 @@ public class TokenService {
                 () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG));
 
     if (stored.isRevoked()) {
+      log.warn("Revoked refresh token reuse attempt for user id={}", stored.getUser().getId());
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
     }
     if (stored.getExpiresAt().isBefore(Instant.now())) {
@@ -69,5 +70,11 @@ public class TokenService {
     String newAccessToken = jwtService.generateAccessToken(user);
     log.info("Access token refreshed for user id={}", user.getId());
     return new RefreshResponse(newAccessToken);
+  }
+
+  @Transactional
+  public void logout(User user) {
+    refreshTokenRepository.revokeAllActiveByUser(user);
+    log.info("Refresh tokens revoked for user id={}", user.getId());
   }
 }

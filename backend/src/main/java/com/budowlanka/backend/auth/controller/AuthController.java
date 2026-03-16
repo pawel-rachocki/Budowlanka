@@ -6,12 +6,15 @@ import com.budowlanka.backend.auth.dto.MessageResponse;
 import com.budowlanka.backend.auth.dto.RefreshRequest;
 import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
+import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.service.AuthService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @Validated
 @RestController
@@ -47,8 +51,18 @@ public class AuthController {
   }
 
   @GetMapping("/verify")
-  public ResponseEntity<MessageResponse> verify(@RequestParam @Size(max = 128) String token) {
+  public ResponseEntity<MessageResponse> verify(
+      @RequestParam @NotBlank @Size(max = 128) String token) {
     authService.verifyEmail(token);
     return ResponseEntity.ok(new MessageResponse("Email zweryfikowany. Możesz się zalogować."));
+  }
+
+  @PostMapping("/logout")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void logout(@AuthenticationPrincipal User user) {
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Brak uwierzytelnienia.");
+    }
+    authService.logout(user);
   }
 }
