@@ -2,12 +2,15 @@ package com.budowlanka.backend.config;
 
 import com.budowlanka.backend.auth.filter.JwtAuthFilter;
 import com.budowlanka.backend.auth.service.UserDetailsServiceImpl;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,6 +32,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
+        .cors(Customizer.withDefaults())
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -49,9 +53,16 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationEntryPoint unauthorizedEntryPoint() {
-    return (request, response, ex) ->
-        response.sendError(
-            jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+    return (request, response, ex) -> {
+      response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      response.setCharacterEncoding("UTF-8");
+      String body =
+          String.format(
+              "{\"status\":401,\"message\":\"Brak lub nieprawidłowy token autoryzacji.\",\"timestamp\":\"%s\"}",
+              Instant.now());
+      response.getWriter().write(body);
+    };
   }
 
   @Bean
