@@ -2,7 +2,9 @@
 function App() {
 
   return (
-  <div></div>
+  <div>
+    <button className="text-red-500">TEST</button>
+  </div>
   )
 }
 
