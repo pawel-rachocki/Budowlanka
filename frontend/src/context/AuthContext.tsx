@@ -20,10 +20,11 @@ function parseJwt(token: string): Record<string, unknown> {
 function userFromToken(token: string): User | null {
   const p = parseJwt(token)
   if (
-      typeof p.sub !== 'string' ||
-      typeof p.email !== 'string' ||
-      !VALID_ROLES.includes(p.role as User['role'])
-  ) return null
+    typeof p.sub !== 'string' ||
+    typeof p.email !== 'string' ||
+    !VALID_ROLES.includes(p.role as User['role'])
+  )
+    return null
   return {
     id: p.sub as string,
     email: p.email as string,

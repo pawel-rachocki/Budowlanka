@@ -10,8 +10,7 @@ export const authApi = {
   register: (data: RegisterRequest) =>
     axios.post<{ message: string }>(`${config.apiUrl}/auth/register`, data),
 
-  login: (data: LoginRequest) =>
-    axios.post<AuthTokens>(`${config.apiUrl}/auth/login`, data),
+  login: (data: LoginRequest) => axios.post<AuthTokens>(`${config.apiUrl}/auth/login`, data),
 
   refresh: (data: RefreshRequest) =>
     axios.post<Pick<AuthTokens, 'accessToken'>>(`${config.apiUrl}/auth/refresh`, data),

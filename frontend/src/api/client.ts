@@ -12,7 +12,6 @@ const apiClient = axios.create({
   baseURL: config.apiUrl,
 })
 
-
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEYS.access)
   if (token) {
@@ -57,7 +56,7 @@ apiClient.interceptors.response.use(
 
     const refreshToken = localStorage.getItem(TOKEN_KEYS.refresh)
     if (!refreshToken) {
-        handleAuthFailure()
+      handleAuthFailure()
       return Promise.reject(error)
     }
 
@@ -90,7 +89,7 @@ apiClient.interceptors.response.use(
     } finally {
       isRefreshing = false
     }
-  },
+  }
 )
 
 export default apiClient

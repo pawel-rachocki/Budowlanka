@@ -1,10 +1,8 @@
-
 function App() {
-
   return (
-  <div>
-    <button className="text-red-500">TEST</button>
-  </div>
+    <div>
+      <button className="text-red-500">TEST</button>
+    </div>
   )
 }
 
