@@ -19,4 +19,7 @@ export const authApi = {
     axios.post(`${config.apiUrl}/auth/logout`, null, {
       headers: { Authorization: `Bearer ${accessToken}` },
     }),
+
+  verifyEmail: (token: string) =>
+    axios.get<{ message: string }>(`${config.apiUrl}/auth/verify`, { params: { token } }),
 }
