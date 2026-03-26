@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -11,6 +12,11 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/verify" element={<VerifyEmailPage />} />
+
+      {/* Trasy chronione — wymagają zalogowania */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<div>Dashboard (Sprint 2)</div>} />
+      </Route>
     </Routes>
   )
 }
