@@ -1,22 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-
-const WrenchIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-  </svg>
-)
+import WrenchIcon from './icons/WrenchIcon'
 
 const MenuIcon = () => (
   <svg
@@ -125,7 +110,7 @@ export default function Navbar() {
                   <div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
                     {getInitial(user.email)}
                   </div>
-                  <span className="text-sm text-navy-700 max-w-[180px] truncate">
+                  <span className="text-sm text-navy-700 max-w-45 truncate">
                     {truncateEmail(user.email)}
                   </span>
                 </div>
