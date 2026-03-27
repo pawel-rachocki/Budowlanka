@@ -31,7 +31,7 @@ export default function LoginPage() {
     setServerError(null)
     try {
       await login(data)
-      navigate('/')
+      navigate('/dashboard')
     } catch (err) {
       if (!axios.isAxiosError(err)) {
         setServerError('Wystąpił nieoczekiwany błąd.')
