@@ -27,9 +27,9 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(DisabledException.class)
-  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
   public ApiError handleDisabled(DisabledException ex) {
-    return ApiError.of(401, "Email niezweryfikowany. Sprawdź skrzynkę pocztową.");
+    return ApiError.of(403, "Email niezweryfikowany. Sprawdź skrzynkę pocztową.");
   }
 
   @ExceptionHandler(BadCredentialsException.class)

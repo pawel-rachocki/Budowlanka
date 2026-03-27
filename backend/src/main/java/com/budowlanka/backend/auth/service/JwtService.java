@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -40,11 +41,15 @@ public class JwtService {
   }
 
   public String generateAccessToken(User user) {
-    return buildToken(user.getEmail(), accessTokenExpiration, "access");
+    return buildToken(
+        user.getEmail(),
+        accessTokenExpiration,
+        "access",
+        Map.of("email", user.getEmail(), "role", user.getRole().name()));
   }
 
   public String generateRefreshToken(User user) {
-    return buildToken(user.getEmail(), refreshTokenExpiration, "refresh");
+    return buildToken(user.getEmail(), refreshTokenExpiration, "refresh", Map.of());
   }
 
   /** Validates signature and expiry only — use {@link #validateAccessToken} in auth filter. */
@@ -90,16 +95,25 @@ public class JwtService {
     }
   }
 
-  private String buildToken(String subject, long expirationMs, String type) {
+  private String buildToken(
+      String subject, long expirationMs, String type, Map<String, Object> extraClaims) {
     Instant now = Instant.now();
-    JWTClaimsSet claims =
+    JWTClaimsSet.Builder builder =
         new JWTClaimsSet.Builder()
             .subject(subject)
             .issuer(ISSUER)
             .issueTime(Date.from(now))
             .expirationTime(Date.from(now.plusMillis(expirationMs)))
-            .claim("type", type)
-            .build();
+            .claim("type", type);
+    extraClaims.forEach(
+        (k, v) -> {
+          try {
+            builder.claim(k, v);
+          } catch (IllegalArgumentException e) {
+            log.warn("Skipping reserved JWT claim key: {}", k);
+          }
+        });
+    JWTClaimsSet claims = builder.build();
     try {
       SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
       jwt.sign(signer);
