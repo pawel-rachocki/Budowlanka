@@ -43,11 +43,40 @@ function isTokenExpired(token: string): boolean {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(getStoredToken)
-  const [user, setUser] = useState<User | null>(() => {
-    const token = getStoredToken()
-    return token && !isTokenExpired(token) ? userFromToken(token) : null
-  })
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function initAuth() {
+      const storedAccess = getStoredToken()
+
+      if (storedAccess && !isTokenExpired(storedAccess)) {
+        setAccessToken(storedAccess)
+        setUser(userFromToken(storedAccess))
+        setIsLoading(false)
+        return
+      }
+
+      const storedRefresh = localStorage.getItem(TOKEN_KEYS.refresh)
+      if (storedRefresh) {
+        try {
+          const { data } = await authApi.refresh({ refreshToken: storedRefresh })
+          const newAccess = data.accessToken
+          localStorage.setItem(TOKEN_KEYS.access, newAccess)
+          setAccessToken(newAccess)
+          setUser(userFromToken(newAccess))
+        } catch {
+          localStorage.removeItem(TOKEN_KEYS.access)
+          localStorage.removeItem(TOKEN_KEYS.refresh)
+        }
+      }
+
+      setIsLoading(false)
+    }
+
+    initAuth()
+  }, [])
 
   useEffect(() => {
     function handleAuthLogout() {
@@ -86,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, logout, isLoading: false }}>
+    <AuthContext.Provider value={{ user, accessToken, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
