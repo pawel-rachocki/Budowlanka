@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,7 @@ class JwtServiceTest {
   private static final String SECRET = "test-secret-key-at-least-32-chars!!";
   private static final long ACCESS_EXP = 900_000L;
   private static final long REFRESH_EXP = 604_800_000L;
+  private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
   private JwtService jwtService;
   private User user;
@@ -36,10 +38,13 @@ class JwtServiceTest {
             true);
     jwtService = new JwtService(props);
 
-    user = new User();
-    user.setEmail("test@example.com");
-    user.setPasswordHash("hashed");
-    user.setRole(UserRole.CLIENT);
+    user =
+        User.builder()
+            .id(USER_ID)
+            .email("test@example.com")
+            .passwordHash("hashed")
+            .role(UserRole.CLIENT)
+            .build();
   }
 
   @Test
@@ -63,7 +68,7 @@ class JwtServiceTest {
     Instant past = Instant.now().minusSeconds(3600);
     JWTClaimsSet claims =
         new JWTClaimsSet.Builder()
-            .subject(user.getEmail())
+            .subject(user.getId().toString())
             .issuer("budowlanka-api")
             .issueTime(Date.from(past.minusSeconds(60)))
             .expirationTime(Date.from(past))
@@ -93,19 +98,19 @@ class JwtServiceTest {
   }
 
   @Test
-  void should_extractCorrectEmail_when_validTokenProvided() {
+  void should_extractCorrectSubject_when_validTokenProvided() {
     String token = jwtService.generateAccessToken(user);
-    assertThat(jwtService.extractUsername(token)).isEqualTo("test@example.com");
+    assertThat(jwtService.extractSubject(token)).isEqualTo(USER_ID.toString());
   }
 
   @Test
-  void should_throwException_when_extractUsernameFromMalformedToken() {
-    assertThatThrownBy(() -> jwtService.extractUsername("bad-token"))
+  void should_throwException_when_extractSubjectFromMalformedToken() {
+    assertThatThrownBy(() -> jwtService.extractSubject("bad-token"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void should_throwException_when_extractUsernameFromTokenWithWrongSignature() {
+  void should_throwException_when_extractSubjectFromTokenWithWrongSignature() {
     JwtService otherService =
         new JwtService(
             new AppProperties(
@@ -114,7 +119,7 @@ class JwtServiceTest {
                 "http://localhost:8080",
                 true));
     String forgedToken = otherService.generateAccessToken(user);
-    assertThatThrownBy(() -> jwtService.extractUsername(forgedToken))
+    assertThatThrownBy(() -> jwtService.extractSubject(forgedToken))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Invalid token signature");
   }
@@ -153,7 +158,7 @@ class JwtServiceTest {
     Instant now = Instant.now();
     JWTClaimsSet claims =
         new JWTClaimsSet.Builder()
-            .subject(user.getEmail())
+            .subject(user.getId().toString())
             .issuer("wrong-issuer")
             .issueTime(Date.from(now))
             .expirationTime(Date.from(now.plusSeconds(3600)))

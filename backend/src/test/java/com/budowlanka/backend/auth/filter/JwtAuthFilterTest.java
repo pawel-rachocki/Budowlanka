@@ -10,6 +10,7 @@ import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.service.JwtService;
 import com.budowlanka.backend.auth.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class JwtAuthFilterTest {
 
   private static final String VALID_TOKEN = "valid.jwt.token";
+  private static final UUID USER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final String EMAIL = "user@example.com";
 
   @Mock private JwtService jwtService;
@@ -80,8 +82,8 @@ class JwtAuthFilterTest {
     MockHttpServletResponse response = new MockHttpServletResponse();
 
     when(jwtService.validateAccessToken(VALID_TOKEN)).thenReturn(true);
-    when(jwtService.extractUsername(VALID_TOKEN)).thenReturn(EMAIL);
-    when(userDetailsService.loadUserByUsername(EMAIL)).thenReturn(user);
+    when(jwtService.extractSubject(VALID_TOKEN)).thenReturn(USER_ID.toString());
+    when(userDetailsService.loadUserById(USER_ID)).thenReturn(user);
 
     filter.doFilterInternal(request, response, filterChain);
 
@@ -102,19 +104,34 @@ class JwtAuthFilterTest {
     filter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
-    verify(jwtService, never()).extractUsername("invalid.token");
+    verify(jwtService, never()).extractSubject("invalid.token");
     assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
   }
 
   @Test
-  void should_notSetAuthentication_when_extractUsernameFails() throws Exception {
+  void should_notSetAuthentication_when_extractSubjectFails() throws Exception {
     MockHttpServletRequest request = new MockHttpServletRequest();
     request.addHeader("Authorization", "Bearer " + VALID_TOKEN);
     MockHttpServletResponse response = new MockHttpServletResponse();
 
     when(jwtService.validateAccessToken(VALID_TOKEN)).thenReturn(true);
-    when(jwtService.extractUsername(VALID_TOKEN))
+    when(jwtService.extractSubject(VALID_TOKEN))
         .thenThrow(new IllegalArgumentException("Invalid token"));
+
+    filter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+  }
+
+  @Test
+  void should_notSetAuthentication_when_subjectIsNotValidUuid() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.addHeader("Authorization", "Bearer " + VALID_TOKEN);
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    when(jwtService.validateAccessToken(VALID_TOKEN)).thenReturn(true);
+    when(jwtService.extractSubject(VALID_TOKEN)).thenReturn("not-a-uuid");
 
     filter.doFilterInternal(request, response, filterChain);
 

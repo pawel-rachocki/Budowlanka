@@ -42,14 +42,14 @@ public class JwtService {
 
   public String generateAccessToken(User user) {
     return buildToken(
-        user.getEmail(),
+        user.getId().toString(),
         accessTokenExpiration,
         "access",
         Map.of("email", user.getEmail(), "role", user.getRole().name()));
   }
 
   public String generateRefreshToken(User user) {
-    return buildToken(user.getEmail(), refreshTokenExpiration, "refresh", Map.of());
+    return buildToken(user.getId().toString(), refreshTokenExpiration, "refresh", Map.of());
   }
 
   /** Validates signature and expiry only — use {@link #validateAccessToken} in auth filter. */
@@ -66,7 +66,7 @@ public class JwtService {
     return validateTokenWithType(token, "refresh");
   }
 
-  public String extractUsername(String token) {
+  public String extractSubject(String token) {
     try {
       SignedJWT jwt = SignedJWT.parse(token);
       if (!jwt.verify(verifier)) {
@@ -74,7 +74,7 @@ public class JwtService {
       }
       return jwt.getJWTClaimsSet().getSubject();
     } catch (ParseException | JOSEException e) {
-      log.debug("Failed to extract username from token: {}", e.getMessage());
+      log.debug("Failed to extract subject from token: {}", e.getMessage());
       throw new IllegalArgumentException("Invalid token", e);
     }
   }
