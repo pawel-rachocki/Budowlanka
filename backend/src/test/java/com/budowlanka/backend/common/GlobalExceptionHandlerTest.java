@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.BindingResult;
@@ -32,6 +33,17 @@ class GlobalExceptionHandlerTest {
     assertThat(result.status()).isEqualTo(400);
     assertThat(result.message()).isEqualTo("Validation failed");
     assertThat(result.errors()).containsExactly("email: must not be blank");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return400_when_httpMessageNotReadable() {
+    HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+
+    ApiError result = handler.handleNotReadable(ex);
+
+    assertThat(result.status()).isEqualTo(400);
+    assertThat(result.message()).isEqualTo("Nieprawidłowy format danych żądania.");
     assertThat(result.timestamp()).isNotNull();
   }
 

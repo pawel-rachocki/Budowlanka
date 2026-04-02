@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,6 +25,13 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .toList();
     return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleNotReadable(HttpMessageNotReadableException ex) {
+    log.warn("Malformed JSON request: {}", ex.getMessage());
+    return ApiError.of(400, "Nieprawidłowy format danych żądania.");
   }
 
   @ExceptionHandler(DisabledException.class)
