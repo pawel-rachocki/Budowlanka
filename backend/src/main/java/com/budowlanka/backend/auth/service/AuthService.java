@@ -6,6 +6,7 @@ import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
+import com.budowlanka.backend.common.EmailAlreadyExistsException;
 import com.budowlanka.backend.config.AppProperties;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -79,9 +80,8 @@ public class AuthService {
     String email = request.email().toLowerCase(Locale.ROOT);
 
     if (userRepository.findByEmail(email).isPresent()) {
-      // Anti-enumeration: silently return — do not reveal whether email is already registered
-      log.info("Registration attempt for already registered email");
-      return;
+      log.warn("Registration attempt for already registered email");
+      throw new EmailAlreadyExistsException();
     }
 
     String plainToken = generatePlainToken();

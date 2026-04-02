@@ -25,6 +25,10 @@ Response `201`:
 ```json
 { "message": "Rejestracja udana. Sprawdź email, aby aktywować konto." }
 ```
+Response `409` (email już zajęty):
+```json
+{ "status": 409, "message": "Email jest już zajęty.", "timestamp": "2026-03-08T10:00:00Z" }
+```
 
 ### GET /api/auth/verify?token={token}
 Response `200`: `{ "message": "Email zweryfikowany. Możesz się zalogować." }`

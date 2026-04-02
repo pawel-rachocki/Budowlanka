@@ -38,6 +38,12 @@ public class GlobalExceptionHandler {
     return ApiError.of(401, "Nieprawidłowy email lub hasło.");
   }
 
+  @ExceptionHandler(EmailAlreadyExistsException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+    return ApiError.conflict(ex.getMessage());
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleIllegalArgument(IllegalArgumentException ex) {

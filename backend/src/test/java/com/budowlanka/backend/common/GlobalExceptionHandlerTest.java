@@ -83,6 +83,15 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
+  void should_return409WithEmailTakenMessage_when_emailAlreadyExists() {
+    ApiError result = handler.handleEmailAlreadyExists(new EmailAlreadyExistsException());
+
+    assertThat(result.status()).isEqualTo(409);
+    assertThat(result.message()).isEqualTo("Email jest już zajęty.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
   void should_return500WithGenericMessage_when_unhandledException() {
     ApiError result = handler.handleGeneric(new RuntimeException("unexpected"));
 
