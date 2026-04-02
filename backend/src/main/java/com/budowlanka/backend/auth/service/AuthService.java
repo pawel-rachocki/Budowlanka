@@ -1,8 +1,6 @@
 package com.budowlanka.backend.auth.service;
 
 import com.budowlanka.backend.auth.dto.LoginRequest;
-import com.budowlanka.backend.auth.dto.LoginResponse;
-import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
@@ -41,13 +39,12 @@ public class AuthService {
   private final TokenService tokenService;
 
   @Transactional
-  public LoginResponse login(LoginRequest request) {
+  public IssuedTokens login(LoginRequest request) {
     String email = request.email().toLowerCase(Locale.ROOT);
     Authentication auth =
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(email, request.password()));
     User user = (User) auth.getPrincipal();
-    log.info("User logged in id={}", user.getId());
     return tokenService.issueTokenPair(user);
   }
 
@@ -107,8 +104,8 @@ public class AuthService {
     emailService.sendVerificationEmail(email, verificationLink);
   }
 
-  @Transactional(readOnly = true)
-  public RefreshResponse refreshToken(String plainRefreshToken) {
+  @Transactional
+  public IssuedTokens refreshToken(String plainRefreshToken) {
     return tokenService.refreshToken(plainRefreshToken);
   }
 

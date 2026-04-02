@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.auth.dto.LoginRequest;
-import com.budowlanka.backend.auth.dto.LoginResponse;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
@@ -48,7 +47,8 @@ class AuthServiceLoginTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     authService =
         new AuthService(
             userRepository,
@@ -68,17 +68,16 @@ class AuthServiceLoginTest {
   }
 
   @Test
-  void should_returnLoginResponse_when_validCredentials() {
+  void should_returnIssuedTokens_when_validCredentials() {
     when(authenticationManager.authenticate(any())).thenReturn(authentication);
     when(authentication.getPrincipal()).thenReturn(verifiedUser);
     when(tokenService.issueTokenPair(verifiedUser))
-        .thenReturn(new LoginResponse("access-token", "refresh-token", "Bearer"));
+        .thenReturn(new IssuedTokens("access-token", "refresh-token"));
 
-    LoginResponse response = authService.login(new LoginRequest(EMAIL, PASSWORD));
+    IssuedTokens result = authService.login(new LoginRequest(EMAIL, PASSWORD));
 
-    assertThat(response.accessToken()).isEqualTo("access-token");
-    assertThat(response.refreshToken()).isEqualTo("refresh-token");
-    assertThat(response.tokenType()).isEqualTo("Bearer");
+    assertThat(result.accessToken()).isEqualTo("access-token");
+    assertThat(result.plainRefreshToken()).isEqualTo("refresh-token");
   }
 
   @Test
@@ -86,7 +85,7 @@ class AuthServiceLoginTest {
     String upperEmail = "TEST@EXAMPLE.COM";
     when(authenticationManager.authenticate(any())).thenReturn(authentication);
     when(authentication.getPrincipal()).thenReturn(verifiedUser);
-    when(tokenService.issueTokenPair(any())).thenReturn(new LoginResponse("a", "r", "Bearer"));
+    when(tokenService.issueTokenPair(any())).thenReturn(new IssuedTokens("a", "r"));
 
     authService.login(new LoginRequest(upperEmail, PASSWORD));
 

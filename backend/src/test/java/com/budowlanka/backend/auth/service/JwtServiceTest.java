@@ -32,7 +32,8 @@ class JwtServiceTest {
     AppProperties props =
         new AppProperties(
             new AppProperties.JwtProperties(SECRET, ACCESS_EXP, REFRESH_EXP),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     jwtService = new JwtService(props);
 
     user = new User();
@@ -81,7 +82,8 @@ class JwtServiceTest {
             new AppProperties(
                 new AppProperties.JwtProperties(
                     "other-secret-key-at-least-32-chars!!", ACCESS_EXP, REFRESH_EXP),
-                "http://localhost:8080"));
+                "http://localhost:8080",
+                true));
     assertThat(jwtService.validateToken(otherService.generateAccessToken(user))).isFalse();
   }
 
@@ -109,7 +111,8 @@ class JwtServiceTest {
             new AppProperties(
                 new AppProperties.JwtProperties(
                     "other-secret-key-at-least-32-chars!!", ACCESS_EXP, REFRESH_EXP),
-                "http://localhost:8080"));
+                "http://localhost:8080",
+                true));
     String forgedToken = otherService.generateAccessToken(user);
     assertThatThrownBy(() -> jwtService.extractUsername(forgedToken))
         .isInstanceOf(IllegalArgumentException.class)

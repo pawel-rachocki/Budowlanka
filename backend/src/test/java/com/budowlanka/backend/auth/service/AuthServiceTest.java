@@ -49,7 +49,8 @@ class AuthServiceTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            BASE_URL);
+            BASE_URL,
+            true);
     authService =
         new AuthService(
             userRepository,

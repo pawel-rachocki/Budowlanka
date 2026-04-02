@@ -2,7 +2,7 @@
 import { createContext, useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authApi } from '../api/auth.api'
-import { TOKEN_KEYS } from '../api/client'
+import { setAccessToken as syncModuleToken } from '../api/client'
 import type { AuthContextValue, LoginRequest, User } from '../types/auth.types'
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
@@ -32,56 +32,35 @@ function userFromToken(token: string): User | null {
   }
 }
 
-function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEYS.access)
-}
-
-function isTokenExpired(token: string): boolean {
-  const p = parseJwt(token)
-  if (!p.exp) return true
-  return (p.exp as number) * 1000 < Date.now()
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [accessToken, setAccessTokenState] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // On startup: attempt silent refresh using the httpOnly cookie.
+  // If no valid session exists the request will 401 and the user stays logged out.
   useEffect(() => {
     async function initAuth() {
-      const storedAccess = getStoredToken()
-
-      if (storedAccess && !isTokenExpired(storedAccess)) {
-        setAccessToken(storedAccess)
-        setUser(userFromToken(storedAccess))
+      try {
+        const { data } = await authApi.refresh()
+        const token = data.accessToken
+        syncModuleToken(token)
+        setAccessTokenState(token)
+        setUser(userFromToken(token))
+      } catch {
+        // no valid session — stay logged out
+      } finally {
         setIsLoading(false)
-        return
       }
-
-      const storedRefresh = localStorage.getItem(TOKEN_KEYS.refresh)
-      if (storedRefresh) {
-        try {
-          const { data } = await authApi.refresh({ refreshToken: storedRefresh })
-          const newAccess = data.accessToken
-          localStorage.setItem(TOKEN_KEYS.access, newAccess)
-          setAccessToken(newAccess)
-          setUser(userFromToken(newAccess))
-        } catch {
-          localStorage.removeItem(TOKEN_KEYS.access)
-          localStorage.removeItem(TOKEN_KEYS.refresh)
-        }
-      }
-
-      setIsLoading(false)
     }
-
     initAuth()
   }, [])
 
   useEffect(() => {
     function handleAuthLogout() {
+      syncModuleToken(null)
       setUser(null)
-      setAccessToken(null)
+      setAccessTokenState(null)
     }
     window.addEventListener('auth:logout', handleAuthLogout)
     return () => window.removeEventListener('auth:logout', handleAuthLogout)
@@ -93,26 +72,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!decoded) {
       throw new Error('Nieprawidłowy token: brak wymaganych claims')
     }
-    localStorage.setItem(TOKEN_KEYS.access, tokens.accessToken)
-    localStorage.setItem(TOKEN_KEYS.refresh, tokens.refreshToken)
-    setAccessToken(tokens.accessToken)
+    syncModuleToken(tokens.accessToken)
+    setAccessTokenState(tokens.accessToken)
     setUser(decoded)
   }, [])
 
   const logout = useCallback(async () => {
-    const token = localStorage.getItem(TOKEN_KEYS.access)
-    if (token) {
+    if (accessToken) {
       try {
-        await authApi.logout(token)
+        await authApi.logout(accessToken)
       } catch {
         // best effort
       }
     }
-    localStorage.removeItem(TOKEN_KEYS.access)
-    localStorage.removeItem(TOKEN_KEYS.refresh)
+    syncModuleToken(null)
+    setAccessTokenState(null)
     setUser(null)
-    setAccessToken(null)
-  }, [])
+  }, [accessToken])
 
   return (
     <AuthContext.Provider value={{ user, accessToken, login, logout, isLoading }}>

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.budowlanka.backend.auth.dto.LoginResponse;
 import com.budowlanka.backend.auth.entity.RefreshToken;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
@@ -43,7 +42,8 @@ class TokenServiceTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, REFRESH_EXPIRATION_MS),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     tokenService = new TokenService(jwtService, refreshTokenRepository, props);
 
     user =
@@ -56,15 +56,14 @@ class TokenServiceTest {
   }
 
   @Test
-  void should_returnLoginResponse_when_issuingTokenPair() {
+  void should_returnIssuedTokens_when_issuingTokenPair() {
     when(jwtService.generateAccessToken(user)).thenReturn("access-token");
     when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
 
-    LoginResponse response = tokenService.issueTokenPair(user);
+    IssuedTokens result = tokenService.issueTokenPair(user);
 
-    assertThat(response.accessToken()).isEqualTo("access-token");
-    assertThat(response.refreshToken()).isEqualTo("refresh-token");
-    assertThat(response.tokenType()).isEqualTo("Bearer");
+    assertThat(result.accessToken()).isEqualTo("access-token");
+    assertThat(result.plainRefreshToken()).isEqualTo("refresh-token");
   }
 
   @Test
@@ -105,11 +104,11 @@ class TokenServiceTest {
     when(jwtService.generateAccessToken(user)).thenReturn("access-token");
     when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
 
-    LoginResponse response = tokenService.issueTokenPair(user);
+    IssuedTokens result = tokenService.issueTokenPair(user);
 
     // Client receives raw JWT, DB receives hash — must not be swapped
-    assertThat(response.refreshToken()).isEqualTo("refresh-token");
-    assertThat(response.refreshToken()).isNotEqualTo(TokenHashUtils.hash("refresh-token"));
+    assertThat(result.plainRefreshToken()).isEqualTo("refresh-token");
+    assertThat(result.plainRefreshToken()).isNotEqualTo(TokenHashUtils.hash("refresh-token"));
   }
 
   @Test

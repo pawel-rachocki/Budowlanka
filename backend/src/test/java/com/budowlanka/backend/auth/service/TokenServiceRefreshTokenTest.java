@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.entity.RefreshToken;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
@@ -40,7 +39,8 @@ class TokenServiceRefreshTokenTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     tokenService = new TokenService(jwtService, refreshTokenRepository, props);
 
     enabledUser =
@@ -53,7 +53,7 @@ class TokenServiceRefreshTokenTest {
   }
 
   @Test
-  void should_returnNewAccessToken_when_validRefreshToken() {
+  void should_returnIssuedTokens_when_validRefreshToken() {
     RefreshToken stored =
         RefreshToken.builder()
             .user(enabledUser)
@@ -63,10 +63,12 @@ class TokenServiceRefreshTokenTest {
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
     when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access-token");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh-token");
 
-    RefreshResponse response = tokenService.refreshToken(PLAIN_TOKEN);
+    IssuedTokens result = tokenService.refreshToken(PLAIN_TOKEN);
 
-    assertThat(response.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.plainRefreshToken()).isEqualTo("new-refresh-token");
   }
 
   @Test
