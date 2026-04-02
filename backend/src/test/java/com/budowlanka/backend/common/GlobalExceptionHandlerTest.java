@@ -36,10 +36,10 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void should_return401WithUnverifiedMessage_when_disabledException() {
+  void should_return403WithUnverifiedMessage_when_disabledException() {
     ApiError result = handler.handleDisabled(new DisabledException("test"));
 
-    assertThat(result.status()).isEqualTo(401);
+    assertThat(result.status()).isEqualTo(403);
     assertThat(result.message()).isEqualTo("Email niezweryfikowany. Sprawdź skrzynkę pocztową.");
   }
 

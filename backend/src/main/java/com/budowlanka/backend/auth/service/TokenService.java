@@ -65,9 +65,12 @@ public class TokenService {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
     }
 
-    // Rotate: revoke the old token (kept for reuse detection), issue a new pair
+    // Rotate: revoke the old token (kept for reuse detection), issue a new pair.
+    // saveAndFlush forces the UPDATE to reach the DB before we INSERT the new token,
+    // otherwise Hibernate batches both and the partial unique index fires (user_id WHERE
+    // revoked=false).
     stored.revoke();
-    refreshTokenRepository.save(stored);
+    refreshTokenRepository.saveAndFlush(stored);
 
     String newAccessToken = jwtService.generateAccessToken(user);
     String newRefreshJwt = jwtService.generateRefreshToken(user);

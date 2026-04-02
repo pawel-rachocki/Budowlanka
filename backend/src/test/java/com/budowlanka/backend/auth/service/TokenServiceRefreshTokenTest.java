@@ -3,6 +3,7 @@ package com.budowlanka.backend.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.auth.entity.RefreshToken;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -64,11 +66,34 @@ class TokenServiceRefreshTokenTest {
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
     when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access-token");
     when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh-token");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
 
     IssuedTokens result = tokenService.refreshToken(PLAIN_TOKEN);
 
     assertThat(result.accessToken()).isEqualTo("new-access-token");
     assertThat(result.plainRefreshToken()).isEqualTo("new-refresh-token");
+  }
+
+  @Test
+  void should_revokeOldTokenBeforeSavingNew_when_rotatingToken() {
+    RefreshToken stored =
+        RefreshToken.builder()
+            .user(enabledUser)
+            .token(HASHED_TOKEN)
+            .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+            .build();
+    when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
+    when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
+    when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
+
+    tokenService.refreshToken(PLAIN_TOKEN);
+
+    assertThat(stored.isRevoked()).isTrue();
+    InOrder order = inOrder(refreshTokenRepository);
+    order.verify(refreshTokenRepository).saveAndFlush(stored);
+    order.verify(refreshTokenRepository).save(any(RefreshToken.class));
   }
 
   @Test
