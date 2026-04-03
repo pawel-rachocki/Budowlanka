@@ -148,6 +148,27 @@ class JwtServiceTest {
   }
 
   @Test
+  void should_includeUniqueJti_when_tokenGenerated() throws ParseException {
+    String token1 = jwtService.generateRefreshToken(user);
+    String token2 = jwtService.generateRefreshToken(user);
+
+    String jti1 = SignedJWT.parse(token1).getJWTClaimsSet().getJWTID();
+    String jti2 = SignedJWT.parse(token2).getJWTClaimsSet().getJWTID();
+
+    assertThat(jti1).isNotBlank();
+    assertThat(jti2).isNotBlank();
+    assertThat(jti1).isNotEqualTo(jti2);
+  }
+
+  @Test
+  void should_generateUniqueTokens_when_calledConcurrentlyForSameUser() {
+    String token1 = jwtService.generateRefreshToken(user);
+    String token2 = jwtService.generateRefreshToken(user);
+
+    assertThat(token1).isNotEqualTo(token2);
+  }
+
+  @Test
   void should_embedIssuer_when_tokenGenerated() throws ParseException {
     JWTClaimsSet claims = SignedJWT.parse(jwtService.generateAccessToken(user)).getJWTClaimsSet();
     assertThat(claims.getIssuer()).isEqualTo("budowlanka-api");

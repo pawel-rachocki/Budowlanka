@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -152,6 +153,29 @@ class TokenServiceRefreshTokenTest {
             .build();
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(false);
+
+    assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+  }
+
+  @Test
+  void should_throw401_when_concurrentRefreshCausesConstraintViolation() {
+    RefreshToken stored =
+        RefreshToken.builder()
+            .user(enabledUser)
+            .token(HASHED_TOKEN)
+            .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+            .build();
+    when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
+    when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
+    when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
+    when(refreshTokenRepository.save(any(RefreshToken.class)))
+        .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
         .isInstanceOf(ResponseStatusException.class)

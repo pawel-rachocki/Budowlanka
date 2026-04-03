@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -102,6 +103,7 @@ public class JwtService {
         new JWTClaimsSet.Builder()
             .subject(subject)
             .issuer(ISSUER)
+            .jwtID(UUID.randomUUID().toString())
             .issueTime(Date.from(now))
             .expirationTime(Date.from(now.plusMillis(expirationMs)))
             .claim("type", type);

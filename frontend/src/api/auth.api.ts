@@ -12,10 +12,21 @@ export const authApi = {
   login: (data: LoginRequest) =>
     authAxios.post<AuthTokens>('/auth/login', data, { withCredentials: true }),
 
-  refresh: () =>
-    authAxios.post<Pick<AuthTokens, 'accessToken'>>('/auth/refresh', null, {
-      withCredentials: true,
-    }),
+  refresh: (() => {
+    let inflight: Promise<ReturnType<typeof authAxios.post<Pick<AuthTokens, 'accessToken'>>>> | null = null
+    return () => {
+      if (!inflight) {
+        inflight = authAxios
+          .post<Pick<AuthTokens, 'accessToken'>>('/auth/refresh', null, {
+            withCredentials: true,
+          })
+          .finally(() => {
+            inflight = null
+          })
+      }
+      return inflight
+    }
+  })(),
 
   logout: (accessToken: string) =>
     authAxios.post('/auth/logout', null, {

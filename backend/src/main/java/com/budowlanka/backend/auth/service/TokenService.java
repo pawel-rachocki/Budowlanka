@@ -8,6 +8,7 @@ import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,20 +70,25 @@ public class TokenService {
     // saveAndFlush forces the UPDATE to reach the DB before we INSERT the new token,
     // otherwise Hibernate batches both and the partial unique index fires (user_id WHERE
     // revoked=false).
-    stored.revoke();
-    refreshTokenRepository.saveAndFlush(stored);
+    try {
+      stored.revoke();
+      refreshTokenRepository.saveAndFlush(stored);
 
-    String newAccessToken = jwtService.generateAccessToken(user);
-    String newRefreshJwt = jwtService.generateRefreshToken(user);
-    refreshTokenRepository.save(
-        RefreshToken.builder()
-            .user(user)
-            .token(TokenHashUtils.hash(newRefreshJwt))
-            .expiresAt(Instant.now().plusMillis(appProperties.jwt().refreshTokenExpiration()))
-            .build());
+      String newAccessToken = jwtService.generateAccessToken(user);
+      String newRefreshJwt = jwtService.generateRefreshToken(user);
+      refreshTokenRepository.save(
+          RefreshToken.builder()
+              .user(user)
+              .token(TokenHashUtils.hash(newRefreshJwt))
+              .expiresAt(Instant.now().plusMillis(appProperties.jwt().refreshTokenExpiration()))
+              .build());
 
-    log.info("Tokens rotated for user id={}", user.getId());
-    return new IssuedTokens(newAccessToken, newRefreshJwt);
+      log.info("Tokens rotated for user id={}", user.getId());
+      return new IssuedTokens(newAccessToken, newRefreshJwt);
+    } catch (DataIntegrityViolationException e) {
+      log.warn("Concurrent refresh detected for user id={}, returning 401", user.getId());
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+    }
   }
 
   @Transactional
