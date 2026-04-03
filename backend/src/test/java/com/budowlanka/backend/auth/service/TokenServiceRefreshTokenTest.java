@@ -3,9 +3,9 @@ package com.budowlanka.backend.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
-import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.entity.RefreshToken;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
@@ -18,8 +18,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +42,8 @@ class TokenServiceRefreshTokenTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     tokenService = new TokenService(jwtService, refreshTokenRepository, props);
 
     enabledUser =
@@ -53,7 +56,7 @@ class TokenServiceRefreshTokenTest {
   }
 
   @Test
-  void should_returnNewAccessToken_when_validRefreshToken() {
+  void should_returnIssuedTokens_when_validRefreshToken() {
     RefreshToken stored =
         RefreshToken.builder()
             .user(enabledUser)
@@ -63,10 +66,35 @@ class TokenServiceRefreshTokenTest {
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
     when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access-token");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh-token");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
 
-    RefreshResponse response = tokenService.refreshToken(PLAIN_TOKEN);
+    IssuedTokens result = tokenService.refreshToken(PLAIN_TOKEN);
 
-    assertThat(response.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.plainRefreshToken()).isEqualTo("new-refresh-token");
+  }
+
+  @Test
+  void should_revokeOldTokenBeforeSavingNew_when_rotatingToken() {
+    RefreshToken stored =
+        RefreshToken.builder()
+            .user(enabledUser)
+            .token(HASHED_TOKEN)
+            .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+            .build();
+    when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
+    when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
+    when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
+
+    tokenService.refreshToken(PLAIN_TOKEN);
+
+    assertThat(stored.isRevoked()).isTrue();
+    InOrder order = inOrder(refreshTokenRepository);
+    order.verify(refreshTokenRepository).saveAndFlush(stored);
+    order.verify(refreshTokenRepository).save(any(RefreshToken.class));
   }
 
   @Test
@@ -125,6 +153,29 @@ class TokenServiceRefreshTokenTest {
             .build();
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(false);
+
+    assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+  }
+
+  @Test
+  void should_throw401_when_concurrentRefreshCausesConstraintViolation() {
+    RefreshToken stored =
+        RefreshToken.builder()
+            .user(enabledUser)
+            .token(HASHED_TOKEN)
+            .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+            .build();
+    when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
+    when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
+    when(jwtService.generateAccessToken(enabledUser)).thenReturn("new-access");
+    when(jwtService.generateRefreshToken(enabledUser)).thenReturn("new-refresh");
+    when(refreshTokenRepository.saveAndFlush(stored)).thenReturn(stored);
+    when(refreshTokenRepository.save(any(RefreshToken.class)))
+        .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
         .isInstanceOf(ResponseStatusException.class)

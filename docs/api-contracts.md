@@ -25,21 +25,27 @@ Response `201`:
 ```json
 { "message": "Rejestracja udana. Sprawdź email, aby aktywować konto." }
 ```
+Response `409` (email już zajęty):
+```json
+{ "status": 409, "message": "Email jest już zajęty.", "timestamp": "2026-03-08T10:00:00Z" }
+```
 
 ### GET /api/auth/verify?token={token}
 Response `200`: `{ "message": "Email zweryfikowany. Możesz się zalogować." }`
 
 ### POST /api/auth/login
 Request: `{ "email": "...", "password": "..." }`
-Response `200`: `{ "accessToken": "...", "refreshToken": "...", "tokenType": "Bearer" }`
+Response `200`: `{ "accessToken": "...", "tokenType": "Bearer" }`
+Set-Cookie: `refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/api/auth/refresh`
 
 ### POST /api/auth/refresh
-Request: `{ "refreshToken": "..." }`
+No body — refreshToken is read from the `refresh_token` httpOnly cookie (sent automatically).
 Response `200`: `{ "accessToken": "..." }`
 
 ### POST /api/auth/logout
 Header: `Authorization: Bearer {accessToken}`
 Response `204`
+Set-Cookie: `refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/auth/refresh; Max-Age=0`
 
 ---
 

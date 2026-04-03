@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,8 +43,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     if (SecurityContextHolder.getContext().getAuthentication() == null
         && jwtService.validateAccessToken(token)) {
       try {
-        String email = jwtService.extractUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        UUID userId = UUID.fromString(jwtService.extractSubject(token));
+        UserDetails userDetails = userDetailsService.loadUserById(userId);
         UsernamePasswordAuthenticationToken auth =
             new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());

@@ -1,7 +1,6 @@
 package com.budowlanka.backend.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,6 +15,7 @@ import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
+import com.budowlanka.backend.common.EmailAlreadyExistsException;
 import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
 import java.util.Optional;
@@ -49,7 +49,8 @@ class AuthServiceTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            BASE_URL);
+            BASE_URL,
+            true);
     authService =
         new AuthService(
             userRepository,
@@ -123,13 +124,12 @@ class AuthServiceTest {
   }
 
   @Test
-  void should_notSaveUser_when_emailAlreadyExists() {
+  void should_throwEmailAlreadyExists_when_emailAlreadyExists() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(new User()));
 
-    // Anti-enumeration: no exception thrown, caller cannot tell if email existed
-    assertThatNoException()
-        .isThrownBy(
-            () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT)));
+    assertThatThrownBy(
+            () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.CLIENT)))
+        .isInstanceOf(EmailAlreadyExistsException.class);
 
     verify(userRepository, never()).save(any());
     verify(emailService, never()).sendVerificationEmail(anyString(), anyString());

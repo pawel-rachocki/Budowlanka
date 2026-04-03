@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
     return ApiError.validationError(errors);
   }
 
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleNotReadable(HttpMessageNotReadableException ex) {
+    log.warn("Malformed JSON request: {}", ex.getMessage());
+    return ApiError.of(400, "Nieprawidłowy format danych żądania.");
+  }
+
   @ExceptionHandler(DisabledException.class)
   @ResponseStatus(HttpStatus.FORBIDDEN)
   public ApiError handleDisabled(DisabledException ex) {
@@ -36,6 +44,12 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.UNAUTHORIZED)
   public ApiError handleBadCredentials(BadCredentialsException ex) {
     return ApiError.of(401, "Nieprawidłowy email lub hasło.");
+  }
+
+  @ExceptionHandler(EmailAlreadyExistsException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+    return ApiError.conflict(ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

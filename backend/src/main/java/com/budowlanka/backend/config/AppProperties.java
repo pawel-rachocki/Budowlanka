@@ -9,7 +9,8 @@ import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties("app")
 @Validated
-public record AppProperties(@Valid JwtProperties jwt, @NotBlank String baseUrl) {
+public record AppProperties(
+    @Valid JwtProperties jwt, @NotBlank String baseUrl, boolean cookieSecure) {
 
   public record JwtProperties(
       @NotBlank @Size(min = 32) String secret,

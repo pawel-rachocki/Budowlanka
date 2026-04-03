@@ -3,21 +3,24 @@ import type { InternalAxiosRequestConfig } from 'axios'
 import { config } from '../config'
 import { authApi } from './auth.api'
 
-export const TOKEN_KEYS = {
-  access: 'access_token',
-  refresh: 'refresh_token',
-} as const
+// accessToken lives in module memory — never persisted to localStorage.
+// AuthContext calls setAccessToken() on login/logout/refresh.
+let accessToken: string | null = null
+
+export function setAccessToken(token: string | null): void {
+  accessToken = token
+}
 
 const apiClient = axios.create({
   baseURL: config.apiUrl,
+  withCredentials: true,
 })
 
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEYS.access)
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+apiClient.interceptors.request.use((reqConfig) => {
+  if (accessToken) {
+    reqConfig.headers.Authorization = `Bearer ${accessToken}`
   }
-  return config
+  return reqConfig
 })
 
 interface QueueEntry {
@@ -40,8 +43,7 @@ function processQueue(error: unknown, token: string | null) {
 }
 
 function handleAuthFailure() {
-  localStorage.removeItem(TOKEN_KEYS.access)
-  localStorage.removeItem(TOKEN_KEYS.refresh)
+  setAccessToken(null)
   window.dispatchEvent(new Event('auth:logout'))
 }
 
@@ -54,8 +56,8 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    const refreshToken = localStorage.getItem(TOKEN_KEYS.refresh)
-    if (!refreshToken) {
+    // No point attempting refresh if we have no session in memory
+    if (!accessToken) {
       handleAuthFailure()
       return Promise.reject(error)
     }
@@ -74,11 +76,10 @@ apiClient.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const { data } = await authApi.refresh({ refreshToken })
+      const { data } = await authApi.refresh()
       const newAccessToken = data.accessToken
 
-      localStorage.setItem(TOKEN_KEYS.access, newAccessToken)
-
+      setAccessToken(newAccessToken)
       processQueue(null, newAccessToken)
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return apiClient(originalRequest)

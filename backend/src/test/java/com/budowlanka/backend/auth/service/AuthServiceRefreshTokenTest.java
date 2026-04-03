@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.budowlanka.backend.auth.dto.RefreshResponse;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.config.AppProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +33,8 @@ class AuthServiceRefreshTokenTest {
         new AppProperties(
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
-            "http://localhost:8080");
+            "http://localhost:8080",
+            true);
     authService =
         new AuthService(
             userRepository,
@@ -48,11 +48,12 @@ class AuthServiceRefreshTokenTest {
   @Test
   void should_delegateToTokenService_when_refreshingToken() {
     when(tokenService.refreshToken(PLAIN_TOKEN))
-        .thenReturn(new RefreshResponse("new-access-token"));
+        .thenReturn(new IssuedTokens("new-access-token", "new-refresh-token"));
 
-    RefreshResponse response = authService.refreshToken(PLAIN_TOKEN);
+    IssuedTokens result = authService.refreshToken(PLAIN_TOKEN);
 
-    assertThat(response.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.accessToken()).isEqualTo("new-access-token");
+    assertThat(result.plainRefreshToken()).isEqualTo("new-refresh-token");
     verify(tokenService).refreshToken(PLAIN_TOKEN);
   }
 }
