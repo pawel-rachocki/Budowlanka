@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import HomePage from './pages/HomePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -21,11 +22,9 @@ function MainLayout() {
 function App() {
   return (
     <Routes>
-      {/* TODO: Sprint 6 — replace with conditional redirect (auth → dashboard, guest → landing page) */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
       {/* Wszystkie strony z Layout (Navbar + Footer) */}
       <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
         {/* Strony auth */}
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
