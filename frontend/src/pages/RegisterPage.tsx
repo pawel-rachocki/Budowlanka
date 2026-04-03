@@ -73,7 +73,7 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+      <div className="flex flex-1 items-center justify-center bg-surface px-4">
         <div className="w-full max-w-md rounded-xl border border-navy-100 bg-surface-card p-8 text-center shadow-sm">
           <div className="mb-4 text-4xl" aria-hidden="true">
             ✉️
@@ -91,7 +91,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+    <div className="flex flex-1 items-center justify-center bg-surface px-4">
       <div className="w-full max-w-md rounded-xl border border-navy-100 bg-surface-card p-8 shadow-sm">
         <h1 className="mb-1 text-2xl font-bold text-navy-900">Utwórz konto</h1>
         <p className="mb-6 text-sm text-muted">Portal ekip remontowych</p>

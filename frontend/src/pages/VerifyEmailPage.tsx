@@ -42,7 +42,7 @@ export default function VerifyEmailPage() {
   }, [token])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+    <div className="flex flex-1 items-center justify-center bg-surface px-4">
       <div className="w-full max-w-md rounded-xl border border-navy-100 bg-surface-card p-8 shadow-sm text-center">
         {status === 'loading' && (
           <>
