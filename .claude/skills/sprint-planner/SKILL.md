@@ -1,7 +1,7 @@
 ---
-name: plan
+name: sprint-planner
 description: "Planowanie kolejnego sprintu na podstawie roadmapy i stanu projektu.
-  Użyj po zakończeniu sprintu: /plan lub /plan 3 (numer następnego sprintu)."
+  Użyj po zakończeniu sprintu: /sprint-planner lub /sprint-planner 3 (numer następnego sprintu)."
 ---
 
 Jesteś sprint plannerem dla projektu Portal Ekipy Remontowe.
