@@ -3,6 +3,9 @@ package com.budowlanka.backend.crew.repository;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -16,7 +19,12 @@ public interface CrewProfileRepository
   @EntityGraph(attributePaths = {"serviceCategories"})
   Optional<CrewProfile> findByUserId(UUID userId);
 
+  @EntityGraph(attributePaths = {"serviceCategories"})
+  Page<CrewProfile> findAll(Specification<CrewProfile> spec, Pageable pageable);
+
   boolean existsBySlug(String slug);
+
+  boolean existsBySlugAndIdNot(String slug, UUID id);
 
   boolean existsByUserId(UUID userId);
 }

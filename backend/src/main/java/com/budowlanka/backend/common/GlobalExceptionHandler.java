@@ -1,5 +1,7 @@
 package com.budowlanka.backend.common;
 
+import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
+import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,11 +54,23 @@ public class GlobalExceptionHandler {
     return ApiError.conflict(ex.getMessage());
   }
 
+  @ExceptionHandler(CrewProfileAlreadyExistsException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleCrewProfileAlreadyExists(CrewProfileAlreadyExistsException ex) {
+    return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(CrewProfileNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handleCrewProfileNotFound(CrewProfileNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleIllegalArgument(IllegalArgumentException ex) {
     log.warn("Illegal argument: {}", ex.getMessage());
-    return ApiError.of(400, "Nieprawidłowe żądanie.");
+    return ApiError.of(400, ex.getMessage());
   }
 
   @ExceptionHandler(ResponseStatusException.class)

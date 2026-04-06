@@ -64,11 +64,13 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void should_return400WithGenericMessage_when_illegalArgumentException() {
-    ApiError result = handler.handleIllegalArgument(new IllegalArgumentException("test"));
+  void should_return400WithOriginalMessage_when_illegalArgumentException() {
+    ApiError result =
+        handler.handleIllegalArgument(
+            new IllegalArgumentException("Pole companyName nie może być puste."));
 
     assertThat(result.status()).isEqualTo(400);
-    assertThat(result.message()).isEqualTo("Nieprawidłowe żądanie.");
+    assertThat(result.message()).isEqualTo("Pole companyName nie może być puste.");
   }
 
   @Test
