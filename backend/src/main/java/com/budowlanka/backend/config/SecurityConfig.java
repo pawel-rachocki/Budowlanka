@@ -46,6 +46,14 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/refresh")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/categories")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/profiles")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/profiles/me")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/profiles/{slug}")
+                    .permitAll()
                     .anyRequest()
                     .authenticated());
     return http.build();
