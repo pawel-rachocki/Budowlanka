@@ -5,6 +5,7 @@ import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ServiceCategoryService {
   private final ServiceCategoryRepository serviceCategoryRepository;
 
+  @Cacheable("categories")
   @Transactional(readOnly = true)
   public List<ServiceCategoryResponse> getAll() {
     return serviceCategoryRepository.findAllByOrderByNameAsc().stream()
