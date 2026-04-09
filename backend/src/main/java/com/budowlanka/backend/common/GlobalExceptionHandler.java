@@ -1,7 +1,13 @@
 package com.budowlanka.backend.common;
 
+import com.budowlanka.backend.auth.exception.AdminRegistrationException;
+import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
+import com.budowlanka.backend.auth.exception.InvalidTokenException;
+import com.budowlanka.backend.auth.exception.VerificationTokenException;
+import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
+import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +97,38 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ApiError handleCrewProfileNotFound(CrewProfileNotFoundException ex) {
     return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidTokenException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ApiError handleInvalidToken(InvalidTokenException ex) {
+    log.debug("Invalid token: {}", ex.getMessage());
+    return ApiError.unauthorized(ex.getMessage());
+  }
+
+  @ExceptionHandler(VerificationTokenException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleVerificationToken(VerificationTokenException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(AdminRegistrationException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleAdminRegistration(AdminRegistrationException ex) {
+    log.warn("Admin registration attempt blocked");
+    return ApiError.of(403, ex.getMessage());
+  }
+
+  @ExceptionHandler(ServiceCategoryNotFoundException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleServiceCategoryNotFound(ServiceCategoryNotFoundException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(BlankFieldException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleBlankField(BlankFieldException ex) {
+    return ApiError.badRequest(ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

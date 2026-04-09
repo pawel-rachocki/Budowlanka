@@ -13,9 +13,10 @@ import static org.mockito.Mockito.when;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
+import com.budowlanka.backend.auth.exception.AdminRegistrationException;
+import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
-import com.budowlanka.backend.common.EmailAlreadyExistsException;
 import com.budowlanka.backend.config.AppProperties;
 import java.time.Instant;
 import java.util.Optional;
@@ -139,7 +140,7 @@ class AuthServiceTest {
   void should_throwException_when_roleIsAdmin() {
     assertThatThrownBy(
             () -> authService.register(new RegisterRequest(EMAIL, PASSWORD, UserRole.ADMIN)))
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(AdminRegistrationException.class);
 
     verify(userRepository, never()).findByEmail(anyString());
     verify(userRepository, never()).save(any());

@@ -4,9 +4,11 @@ import com.budowlanka.backend.auth.dto.LoginRequest;
 import com.budowlanka.backend.auth.dto.RegisterRequest;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
+import com.budowlanka.backend.auth.exception.AdminRegistrationException;
+import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
+import com.budowlanka.backend.auth.exception.VerificationTokenException;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
-import com.budowlanka.backend.common.EmailAlreadyExistsException;
 import com.budowlanka.backend.config.AppProperties;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -56,12 +58,12 @@ public class AuthService {
         userRepository
             .findByVerificationToken(hashedToken)
             .orElseThrow(
-                () -> new IllegalArgumentException("Token weryfikacyjny jest nieprawidłowy."));
+                () -> new VerificationTokenException("Token weryfikacyjny jest nieprawidłowy."));
 
     if (user.isEmailVerified()) return;
 
     if (user.getTokenExpiresAt() == null || Instant.now().isAfter(user.getTokenExpiresAt())) {
-      throw new IllegalArgumentException("Token weryfikacyjny wygasł.");
+      throw new VerificationTokenException("Token weryfikacyjny wygasł.");
     }
 
     user.setEmailVerified(true);
@@ -74,7 +76,7 @@ public class AuthService {
   @Transactional
   public void register(RegisterRequest request) {
     if (request.role() == UserRole.ADMIN) {
-      throw new IllegalArgumentException("Rola ADMIN nie może być wybrana podczas rejestracji.");
+      throw new AdminRegistrationException();
     }
 
     String email = request.email().toLowerCase(Locale.ROOT);

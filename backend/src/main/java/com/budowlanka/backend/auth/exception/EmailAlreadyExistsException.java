@@ -1,4 +1,4 @@
-package com.budowlanka.backend.common;
+package com.budowlanka.backend.auth.exception;
 
 import java.io.Serial;
 

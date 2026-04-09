@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
+import com.budowlanka.backend.auth.exception.VerificationTokenException;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
@@ -81,16 +82,16 @@ class AuthServiceVerifyEmailTest {
   }
 
   @Test
-  void verifyEmail_tokenNotFound_throwsIllegalArgumentException() {
+  void verifyEmail_tokenNotFound_throwsVerificationTokenException() {
     when(userRepository.findByVerificationToken(HASHED_TOKEN)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> authService.verifyEmail(PLAIN_TOKEN))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(VerificationTokenException.class)
         .hasMessageContaining("nieprawidłowy");
   }
 
   @Test
-  void verifyEmail_expiredToken_throwsIllegalArgumentException() {
+  void verifyEmail_expiredToken_throwsVerificationTokenException() {
     User user =
         User.builder()
             .email("test@example.com")
@@ -103,7 +104,7 @@ class AuthServiceVerifyEmailTest {
     when(userRepository.findByVerificationToken(HASHED_TOKEN)).thenReturn(Optional.of(user));
 
     assertThatThrownBy(() -> authService.verifyEmail(PLAIN_TOKEN))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(VerificationTokenException.class)
         .hasMessageContaining("wygasł");
   }
 
@@ -126,7 +127,7 @@ class AuthServiceVerifyEmailTest {
   }
 
   @Test
-  void verifyEmail_nullTokenExpiresAt_throwsIllegalArgumentException() {
+  void verifyEmail_nullTokenExpiresAt_throwsVerificationTokenException() {
     User user =
         User.builder()
             .email("test@example.com")
@@ -139,7 +140,7 @@ class AuthServiceVerifyEmailTest {
     when(userRepository.findByVerificationToken(HASHED_TOKEN)).thenReturn(Optional.of(user));
 
     assertThatThrownBy(() -> authService.verifyEmail(PLAIN_TOKEN))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(VerificationTokenException.class)
         .hasMessageContaining("wygasł");
   }
 }

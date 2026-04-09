@@ -18,6 +18,14 @@ public record ApiError(
     return new ApiError(409, message, Instant.now(), null);
   }
 
+  public static ApiError unauthorized(String message) {
+    return new ApiError(401, message, Instant.now(), null);
+  }
+
+  public static ApiError badRequest(String message) {
+    return new ApiError(400, message, Instant.now(), null);
+  }
+
   public static ApiError of(int status, String message) {
     return new ApiError(status, message, Instant.now(), null);
   }

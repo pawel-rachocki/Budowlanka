@@ -6,8 +6,10 @@ import com.budowlanka.backend.crew.dto.*;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.entity.ServiceCategory;
 import com.budowlanka.backend.crew.enums.Voivodeship;
+import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
+import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import com.budowlanka.backend.crew.specification.CrewProfileSpecification;
@@ -223,7 +225,7 @@ public class CrewProfileService {
     }
     List<ServiceCategory> found = serviceCategoryRepository.findAllById(categoryIds);
     if (found.size() != categoryIds.size()) {
-      throw new IllegalArgumentException("Jedna lub więcej kategorii usług nie istnieje.");
+      throw new ServiceCategoryNotFoundException();
     }
     return new HashSet<>(found);
   }
@@ -235,7 +237,7 @@ public class CrewProfileService {
   private String requireNonBlank(String value, String fieldName) {
     String trimmed = value.trim();
     if (trimmed.isEmpty()) {
-      throw new IllegalArgumentException("Pole " + fieldName + " nie może być puste.");
+      throw new BlankFieldException(fieldName);
     }
     return trimmed;
   }
