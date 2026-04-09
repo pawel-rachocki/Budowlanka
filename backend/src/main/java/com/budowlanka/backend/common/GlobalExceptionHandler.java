@@ -2,17 +2,20 @@ package com.budowlanka.backend.common;
 
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -27,6 +30,23 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .toList();
     return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleConstraintViolation(ConstraintViolationException ex) {
+    List<String> errors =
+        ex.getConstraintViolations().stream()
+            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+            .toList();
+    return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    String msg = "Nieprawidłowa wartość parametru '" + ex.getName() + "': " + ex.getValue();
+    return ApiError.of(400, msg);
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -46,6 +66,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.UNAUTHORIZED)
   public ApiError handleBadCredentials(BadCredentialsException ex) {
     return ApiError.of(401, "Nieprawidłowy email lub hasło.");
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleAccessDenied(AccessDeniedException ex) {
+    log.debug("Access denied: {}", ex.getMessage());
+    return ApiError.of(403, "Brak uprawnień do wykonania tej operacji.");
   }
 
   @ExceptionHandler(EmailAlreadyExistsException.class)

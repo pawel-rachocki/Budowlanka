@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class CrewProfileService {
   private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^a-z0-9]+");
   private static final Pattern EDGE_HYPHENS = Pattern.compile("^-|-$");
   private static final Map<Character, String> POLISH_CHARS = Map.of('ł', "l", 'Ł', "l");
+  private static final Set<String> RESERVED_SLUGS = Set.of("me", "admin", "api", "new");
 
   private final CrewProfileRepository crewProfileRepository;
   private final ServiceCategoryRepository serviceCategoryRepository;
@@ -38,7 +40,7 @@ public class CrewProfileService {
   @Transactional
   public CrewProfileResponse createProfile(User user, CreateCrewProfileRequest req) {
     if (user.getRole() != UserRole.CREW) {
-      throw new IllegalArgumentException("Tylko użytkownicy z rolą CREW mogą tworzyć profil.");
+      throw new AccessDeniedException("Tylko użytkownicy z rolą CREW mogą tworzyć profil.");
     }
     if (crewProfileRepository.existsByUserId(user.getId())) {
       throw new CrewProfileAlreadyExistsException();
@@ -122,11 +124,29 @@ public class CrewProfileService {
     return toResponse(profile);
   }
 
+  /**
+   * Zwraca profil po slugu z uwzględnieniem widoczności i kontekstu odwiedzającego.
+   *
+   * <p>Ukryte profile (np. z wygasłą subskrypcją) są dostępne tylko dla ich właściciela. Dane
+   * kontaktowe (phone, contactEmail) są zwracane tylko zalogowanym użytkownikom — dla anonimów pola
+   * te są null.
+   *
+   * @param slug unikalny slug profilu
+   * @param viewer aktualnie zalogowany użytkownik (null dla anonima)
+   * @throws CrewProfileNotFoundException jeśli profil nie istnieje lub jest ukryty dla tego
+   *     odwiedzającego
+   */
   @Transactional(readOnly = true)
-  public CrewProfileResponse getBySlug(String slug) {
+  public CrewProfileResponse getBySlug(String slug, User viewer) {
     CrewProfile profile =
         crewProfileRepository.findBySlug(slug).orElseThrow(CrewProfileNotFoundException::new);
-    return toResponse(profile);
+
+    boolean isOwner = viewer != null && profile.getUser().getId().equals(viewer.getId());
+    if (!profile.isVisible() && !isOwner) {
+      throw new CrewProfileNotFoundException();
+    }
+
+    return toResponse(profile, /*includeContact*/ viewer != null);
   }
 
   @Transactional(readOnly = true)
@@ -160,23 +180,26 @@ public class CrewProfileService {
 
   private String generateUniqueSlug(String companyName, String city, UUID excludeId) {
     String base = slugify(companyName) + "-" + slugify(city);
-    if (!slugExists(base, excludeId)) {
+    if (isSlugAvailable(base, excludeId)) {
       return base;
     }
     for (int i = 2; i <= MAX_SLUG_ATTEMPTS; i++) {
       String candidate = base + "-" + i;
-      if (!slugExists(candidate, excludeId)) {
+      if (isSlugAvailable(candidate, excludeId)) {
         return candidate;
       }
     }
     throw new IllegalStateException("Nie można wygenerować unikalnego sluga dla: " + base);
   }
 
-  private boolean slugExists(String slug, UUID excludeId) {
-    if (excludeId != null) {
-      return crewProfileRepository.existsBySlugAndIdNot(slug, excludeId);
+  private boolean isSlugAvailable(String slug, UUID excludeId) {
+    if (RESERVED_SLUGS.contains(slug)) {
+      return false;
     }
-    return crewProfileRepository.existsBySlug(slug);
+    if (excludeId != null) {
+      return !crewProfileRepository.existsBySlugAndIdNot(slug, excludeId);
+    }
+    return !crewProfileRepository.existsBySlug(slug);
   }
 
   static String slugify(String input) {
@@ -218,13 +241,17 @@ public class CrewProfileService {
   }
 
   private CrewProfileResponse toResponse(CrewProfile profile) {
+    return toResponse(profile, true);
+  }
+
+  private CrewProfileResponse toResponse(CrewProfile profile, boolean includeContact) {
     return new CrewProfileResponse(
         profile.getId(),
         profile.getCompanyName(),
         profile.getSlug(),
         profile.getDescription(),
-        profile.getPhone(),
-        profile.getContactEmail(),
+        includeContact ? profile.getPhone() : null,
+        includeContact ? profile.getContactEmail() : null,
         profile.getCity(),
         profile.getVoivodeship().getDisplayName(),
         profile.getServiceRadiusKm(),
