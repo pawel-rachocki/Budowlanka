@@ -13,7 +13,7 @@ export const authApi = {
     authAxios.post<AuthTokens>('/auth/login', data, { withCredentials: true }),
 
   refresh: (() => {
-    let inflight: Promise<ReturnType<typeof authAxios.post<Pick<AuthTokens, 'accessToken'>>>> | null = null
+    let inflight: ReturnType<typeof authAxios.post<Pick<AuthTokens, 'accessToken'>>> | null = null
     return () => {
       if (!inflight) {
         inflight = authAxios
@@ -24,7 +24,7 @@ export const authApi = {
             inflight = null
           })
       }
-      return inflight
+      return inflight!
     }
   })(),
 
