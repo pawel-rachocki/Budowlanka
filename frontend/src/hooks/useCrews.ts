@@ -6,7 +6,7 @@ export function useCrews(params: CrewSearchParams = {}) {
   const { city, voivodeship, categoryId, page = 0, size: rawSize = 20 } = params
   const size = Math.min(rawSize, 100)
 
-  const { data, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['crews', { city, voivodeship, categoryId, page, size }],
     queryFn: () =>
       crewApi.getCrews({ city, voivodeship, categoryId, page, size }).then((res) => res.data),
@@ -20,5 +20,6 @@ export function useCrews(params: CrewSearchParams = {}) {
     isLoading,
     isFetching,
     error,
+    refetch,
   }
 }
