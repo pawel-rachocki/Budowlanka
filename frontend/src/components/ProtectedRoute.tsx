@@ -1,7 +1,12 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import type { User } from '../types/auth.types'
 
-export default function ProtectedRoute() {
+interface ProtectedRouteProps {
+  requiredRole?: User['role']
+}
+
+export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth()
   const location = useLocation()
 
@@ -19,6 +24,10 @@ export default function ProtectedRoute() {
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" replace />
   }
 
   return <Outlet />

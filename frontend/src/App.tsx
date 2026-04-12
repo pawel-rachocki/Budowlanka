@@ -4,6 +4,8 @@ import LoginPage from './pages/LoginPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import HomePage from './pages/HomePage'
 import CrewListPage from './pages/CrewListPage'
+import CrewProfilePage from './pages/CrewProfilePage'
+import CrewDashboardPage from './pages/CrewDashboardPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -27,12 +29,13 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/ekipy" element={<CrewListPage />} />
+        <Route path="/ekipy/:slug" element={<CrewProfilePage />} />
         {/* Strony auth */}
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verify" element={<VerifyEmailPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<div>Dashboard (Sprint 2)</div>} />
+        <Route element={<ProtectedRoute requiredRole="CREW" />}>
+          <Route path="/dashboard" element={<CrewDashboardPage />} />
         </Route>
         {/* Strony informacyjne — Sprint 6 */}
         <Route path="/o-nas" element={<div>O nas (Sprint 6)</div>} />

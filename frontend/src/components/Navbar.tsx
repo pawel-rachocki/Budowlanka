@@ -106,6 +106,14 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center gap-2">
             {user ? (
               <>
+                {user.role === 'CREW' && (
+                  <Link
+                    to="/dashboard"
+                    className="px-4 py-2 text-sm font-medium text-navy-700 hover:text-navy-900 transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  >
+                    Mój panel
+                  </Link>
+                )}
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-navy-100">
                   <div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
                     {getInitial(user.email)}
@@ -165,6 +173,15 @@ export default function Navbar() {
                   </div>
                   <span className="text-sm text-navy-700 truncate">{user.email}</span>
                 </div>
+                {user.role === 'CREW' && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2.5 text-sm font-medium text-navy-700 hover:bg-surface rounded-lg transition-colors"
+                  >
+                    Mój panel
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-3 py-2.5 text-sm font-medium text-navy-700 hover:bg-surface rounded-lg transition-colors"
