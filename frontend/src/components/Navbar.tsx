@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import WrenchIcon from './icons/WrenchIcon'
 
@@ -104,6 +104,17 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-2">
+            <NavLink
+              to="/ekipy"
+              className={({ isActive }) =>
+                `px-4 py-2 text-sm font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  isActive ? 'text-brand-500 font-semibold' : 'text-navy-700 hover:text-navy-900'
+                }`
+              }
+            >
+              Ekipy
+            </NavLink>
+            <span className="w-px h-5 bg-navy-100" aria-hidden="true" />
             {user ? (
               <>
                 {user.role === 'CREW' && (
@@ -111,7 +122,7 @@ export default function Navbar() {
                     to="/dashboard"
                     className="px-4 py-2 text-sm font-medium text-navy-700 hover:text-navy-900 transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   >
-                    Mój panel
+                    Mój profil
                   </Link>
                 )}
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-navy-100">
@@ -165,6 +176,17 @@ export default function Navbar() {
             id="mobile-menu"
             className="sm:hidden border-t border-navy-100 py-3 flex flex-col gap-1"
           >
+            <NavLink
+              to="/ekipy"
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                }`
+              }
+            >
+              Ekipy
+            </NavLink>
             {user ? (
               <>
                 <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-surface mb-1">
@@ -179,7 +201,7 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="block px-3 py-2.5 text-sm font-medium text-navy-700 hover:bg-surface rounded-lg transition-colors"
                   >
-                    Mój panel
+                    Mój profil
                   </Link>
                 )}
                 <button
