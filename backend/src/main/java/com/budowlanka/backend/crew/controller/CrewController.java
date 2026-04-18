@@ -1,6 +1,7 @@
 package com.budowlanka.backend.crew.controller;
 
 import com.budowlanka.backend.auth.entity.User;
+import com.budowlanka.backend.common.PagedResponse;
 import com.budowlanka.backend.crew.dto.CreateCrewProfileRequest;
 import com.budowlanka.backend.crew.dto.CrewProfileResponse;
 import com.budowlanka.backend.crew.dto.CrewProfileSummaryResponse;
@@ -12,7 +13,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -70,11 +70,11 @@ public class CrewController {
   }
 
   @GetMapping
-  public Page<CrewProfileSummaryResponse> search(
+  public PagedResponse<CrewProfileSummaryResponse> search(
       @RequestParam(required = false) String city,
       @RequestParam(required = false) Voivodeship voivodeship,
       @RequestParam(required = false) UUID categoryId,
       @PageableDefault(size = 20) Pageable pageable) {
-    return crewProfileService.search(city, voivodeship, categoryId, pageable);
+    return PagedResponse.from(crewProfileService.search(city, voivodeship, categoryId, pageable));
   }
 }
