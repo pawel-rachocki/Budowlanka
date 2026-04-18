@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "crew_profiles")
@@ -82,6 +83,7 @@ public class CrewProfile {
       name = "crew_services",
       joinColumns = @JoinColumn(name = "crew_profile_id"),
       inverseJoinColumns = @JoinColumn(name = "category_id"))
+  @BatchSize(size = 50)
   @Builder.Default
   private Set<ServiceCategory> serviceCategories = new HashSet<>();
 

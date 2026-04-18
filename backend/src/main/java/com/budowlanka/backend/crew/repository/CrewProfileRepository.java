@@ -19,7 +19,6 @@ public interface CrewProfileRepository
   @EntityGraph(attributePaths = {"serviceCategories"})
   Optional<CrewProfile> findByUserId(UUID userId);
 
-  @EntityGraph(attributePaths = {"serviceCategories"})
   Page<CrewProfile> findAll(Specification<CrewProfile> spec, Pageable pageable);
 
   boolean existsBySlug(String slug);
