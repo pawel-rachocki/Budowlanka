@@ -98,6 +98,11 @@ export default function CrewListPage() {
     [urlVoivodeship, urlCategoryId, setSearchParams],
   )
 
+  const handleReset = useCallback(() => {
+    setCityInput('')
+    setSearchParams(new URLSearchParams(), { replace: true })
+  }, [setSearchParams])
+
   const handlePageChange = useCallback(
     (page: number) => {
       setSearchParams((prev) => {
@@ -173,7 +178,7 @@ export default function CrewListPage() {
       {/* ── Sticky filter bar ─────────────────────────────────────── */}
       <div className="sticky top-16 z-10 bg-surface/90 backdrop-blur-sm border-b border-navy-100 py-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <CrewFilters value={filtersValue} onChange={handleFiltersChange} />
+          <CrewFilters value={filtersValue} onChange={handleFiltersChange} onReset={handleReset} />
         </div>
       </div>
 
