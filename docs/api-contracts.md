@@ -49,4 +49,82 @@ Set-Cookie: `refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/api/auth/r
 
 ---
 
+## Crew — `/api/crew`
+
+### POST /api/crew/profiles
+Auth: `Bearer {accessToken}` (rola CREW)
+Request:
+```json
+{
+  "companyName": "Kowalski Remonty",
+  "description": "Profesjonalne remonty",
+  "phone": "600100200",
+  "contactEmail": "kontakt@kowalski.pl",
+  "city": "Warszawa",
+  "voivodeship": "MAZOWIECKIE",
+  "serviceRadiusKm": 50,
+  "nip": "1234567890",
+  "categoryIds": ["uuid1", "uuid2"]
+}
+```
+Response `201`: `CrewProfileResponse` (pełny profil)
+Response `400`: błąd walidacji (np. puste `companyName`, nieprawidłowy NIP)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `409`: profil już istnieje dla tego użytkownika
+
+### GET /api/crew/profiles/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `CrewProfileResponse`
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil nie istnieje
+
+### PUT /api/crew/profiles/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Request: pola opcjonalne (patch semantics) — te same co POST, wszystkie nullable
+Response `200`: `CrewProfileResponse`
+Response `400`: błąd walidacji
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil nie istnieje
+
+### GET /api/crew/profiles/{slug}
+Auth: opcjonalny (`Bearer {accessToken}`)
+Response `200`: `CrewProfileResponse`
+- Zalogowany użytkownik: pełne dane — `phone` i `contactEmail` są wypełnione
+- Anonim (brak tokenu): `phone` i `contactEmail` są `null`
+- Ukryty profil (`is_visible=false`): `404` dla każdego poza właścicielem
+Response `404`: profil nie istnieje lub jest ukryty dla tego wywołującego
+
+### GET /api/crew/profiles?city=&voivodeship=&categoryId=&page=0&size=20
+Auth: brak (publiczny)
+Constraints: max `size=100`; zwraca tylko profile z `is_visible=true`
+Response `200`:
+```json
+{
+  "content": [ { "id": "...", "companyName": "...", "slug": "...", "city": "...", "voivodeship": "...", "avgRating": 4.5, "reviewCount": 12, "categories": [] } ],
+  "totalElements": 42,
+  "totalPages": 3,
+  "number": 0,
+  "size": 20
+}
+```
+
+---
+
+## Categories — `/api/categories`
+
+### GET /api/categories
+Auth: brak (publiczny)
+Response `200`:
+```json
+[
+  { "id": "uuid", "name": "Malowanie", "slug": "malowanie" },
+  { "id": "uuid", "name": "Tynkowanie", "slug": "tynkowanie" }
+]
+```
+
+---
+
 <!-- Kolejne endpointy dodawaj tutaj w miarę implementacji -->

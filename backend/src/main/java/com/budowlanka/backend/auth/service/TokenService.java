@@ -2,6 +2,7 @@ package com.budowlanka.backend.auth.service;
 
 import com.budowlanka.backend.auth.entity.RefreshToken;
 import com.budowlanka.backend.auth.entity.User;
+import com.budowlanka.backend.auth.exception.InvalidTokenException;
 import com.budowlanka.backend.auth.repository.RefreshTokenRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
@@ -9,10 +10,8 @@ import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -47,23 +46,22 @@ public class TokenService {
     RefreshToken stored =
         refreshTokenRepository
             .findByToken(hash)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG));
+            .orElseThrow(() -> new InvalidTokenException(INVALID_TOKEN_MSG));
 
     if (stored.isRevoked()) {
       log.warn("Revoked refresh token reuse attempt for user id={}", stored.getUser().getId());
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+      throw new InvalidTokenException(INVALID_TOKEN_MSG);
     }
     if (stored.getExpiresAt().isBefore(Instant.now())) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+      throw new InvalidTokenException(INVALID_TOKEN_MSG);
     }
     if (!jwtService.validateRefreshToken(plainRefreshToken)) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+      throw new InvalidTokenException(INVALID_TOKEN_MSG);
     }
 
     User user = stored.getUser();
     if (!user.isEnabled()) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+      throw new InvalidTokenException(INVALID_TOKEN_MSG);
     }
 
     // Rotate: revoke the old token (kept for reuse detection), issue a new pair.
@@ -87,7 +85,7 @@ public class TokenService {
       return new IssuedTokens(newAccessToken, newRefreshJwt);
     } catch (DataIntegrityViolationException e) {
       log.warn("Concurrent refresh detected for user id={}, returning 401", user.getId());
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_TOKEN_MSG);
+      throw new InvalidTokenException(INVALID_TOKEN_MSG);
     }
   }
 

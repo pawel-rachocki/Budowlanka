@@ -1,16 +1,27 @@
 package com.budowlanka.backend.common;
 
+import com.budowlanka.backend.auth.exception.AdminRegistrationException;
+import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
+import com.budowlanka.backend.auth.exception.InvalidTokenException;
+import com.budowlanka.backend.auth.exception.VerificationTokenException;
+import com.budowlanka.backend.crew.exception.BlankFieldException;
+import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
+import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
+import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -25,6 +36,23 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .toList();
     return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleConstraintViolation(ConstraintViolationException ex) {
+    List<String> errors =
+        ex.getConstraintViolations().stream()
+            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+            .toList();
+    return ApiError.validationError(errors);
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    String msg = "Nieprawidłowa wartość parametru '" + ex.getName() + "': " + ex.getValue();
+    return ApiError.of(400, msg);
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -46,17 +74,68 @@ public class GlobalExceptionHandler {
     return ApiError.of(401, "Nieprawidłowy email lub hasło.");
   }
 
+  @ExceptionHandler(AccessDeniedException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleAccessDenied(AccessDeniedException ex) {
+    log.debug("Access denied: {}", ex.getMessage());
+    return ApiError.of(403, "Brak uprawnień do wykonania tej operacji.");
+  }
+
   @ExceptionHandler(EmailAlreadyExistsException.class)
   @ResponseStatus(HttpStatus.CONFLICT)
   public ApiError handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
     return ApiError.conflict(ex.getMessage());
   }
 
+  @ExceptionHandler(CrewProfileAlreadyExistsException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleCrewProfileAlreadyExists(CrewProfileAlreadyExistsException ex) {
+    return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(CrewProfileNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handleCrewProfileNotFound(CrewProfileNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidTokenException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ApiError handleInvalidToken(InvalidTokenException ex) {
+    log.debug("Invalid token: {}", ex.getMessage());
+    return ApiError.unauthorized(ex.getMessage());
+  }
+
+  @ExceptionHandler(VerificationTokenException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleVerificationToken(VerificationTokenException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(AdminRegistrationException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleAdminRegistration(AdminRegistrationException ex) {
+    log.warn("Admin registration attempt blocked");
+    return ApiError.of(403, ex.getMessage());
+  }
+
+  @ExceptionHandler(ServiceCategoryNotFoundException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleServiceCategoryNotFound(ServiceCategoryNotFoundException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(BlankFieldException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleBlankField(BlankFieldException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleIllegalArgument(IllegalArgumentException ex) {
     log.warn("Illegal argument: {}", ex.getMessage());
-    return ApiError.of(400, "Nieprawidłowe żądanie.");
+    return ApiError.of(400, ex.getMessage());
   }
 
   @ExceptionHandler(ResponseStatusException.class)

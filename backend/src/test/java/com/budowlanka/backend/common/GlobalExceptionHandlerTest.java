@@ -4,6 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.budowlanka.backend.auth.exception.AdminRegistrationException;
+import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
+import com.budowlanka.backend.auth.exception.InvalidTokenException;
+import com.budowlanka.backend.auth.exception.VerificationTokenException;
+import com.budowlanka.backend.crew.exception.BlankFieldException;
+import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -64,11 +70,13 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void should_return400WithGenericMessage_when_illegalArgumentException() {
-    ApiError result = handler.handleIllegalArgument(new IllegalArgumentException("test"));
+  void should_return400WithOriginalMessage_when_illegalArgumentException() {
+    ApiError result =
+        handler.handleIllegalArgument(
+            new IllegalArgumentException("Pole companyName nie może być puste."));
 
     assertThat(result.status()).isEqualTo(400);
-    assertThat(result.message()).isEqualTo("Nieprawidłowe żądanie.");
+    assertThat(result.message()).isEqualTo("Pole companyName nie może być puste.");
   }
 
   @Test
@@ -100,6 +108,55 @@ class GlobalExceptionHandlerTest {
 
     assertThat(result.status()).isEqualTo(409);
     assertThat(result.message()).isEqualTo("Email jest już zajęty.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return401_when_invalidTokenException() {
+    ApiError result =
+        handler.handleInvalidToken(
+            new InvalidTokenException("Sesja wygasła. Zaloguj się ponownie."));
+
+    assertThat(result.status()).isEqualTo(401);
+    assertThat(result.message()).isEqualTo("Sesja wygasła. Zaloguj się ponownie.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return400_when_verificationTokenException() {
+    ApiError result =
+        handler.handleVerificationToken(
+            new VerificationTokenException("Token weryfikacyjny wygasł."));
+
+    assertThat(result.status()).isEqualTo(400);
+    assertThat(result.message()).isEqualTo("Token weryfikacyjny wygasł.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return403_when_adminRegistrationException() {
+    ApiError result = handler.handleAdminRegistration(new AdminRegistrationException());
+
+    assertThat(result.status()).isEqualTo(403);
+    assertThat(result.message()).contains("ADMIN");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return400_when_serviceCategoryNotFoundException() {
+    ApiError result = handler.handleServiceCategoryNotFound(new ServiceCategoryNotFoundException());
+
+    assertThat(result.status()).isEqualTo(400);
+    assertThat(result.message()).contains("kategorii");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return400_when_blankFieldException() {
+    ApiError result = handler.handleBlankField(new BlankFieldException("companyName"));
+
+    assertThat(result.status()).isEqualTo(400);
+    assertThat(result.message()).isEqualTo("Pole companyName nie może być puste.");
     assertThat(result.timestamp()).isNotNull();
   }
 

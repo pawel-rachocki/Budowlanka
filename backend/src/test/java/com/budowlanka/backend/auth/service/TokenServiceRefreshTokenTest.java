@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.budowlanka.backend.auth.entity.RefreshToken;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
+import com.budowlanka.backend.auth.exception.InvalidTokenException;
 import com.budowlanka.backend.auth.repository.RefreshTokenRepository;
 import com.budowlanka.backend.auth.util.TokenHashUtils;
 import com.budowlanka.backend.config.AppProperties;
@@ -22,7 +23,6 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class TokenServiceRefreshTokenTest {
@@ -102,10 +102,8 @@ class TokenServiceRefreshTokenTest {
     when(refreshTokenRepository.findByToken(any())).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex ->
-                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 
   @Test
@@ -120,10 +118,8 @@ class TokenServiceRefreshTokenTest {
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex ->
-                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 
   @Test
@@ -137,10 +133,8 @@ class TokenServiceRefreshTokenTest {
     when(refreshTokenRepository.findByToken(HASHED_TOKEN)).thenReturn(Optional.of(stored));
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex ->
-                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 
   @Test
@@ -155,10 +149,8 @@ class TokenServiceRefreshTokenTest {
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(false);
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex ->
-                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 
   @Test
@@ -178,10 +170,8 @@ class TokenServiceRefreshTokenTest {
         .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex ->
-                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(401));
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 
   @Test
@@ -203,12 +193,7 @@ class TokenServiceRefreshTokenTest {
     when(jwtService.validateRefreshToken(PLAIN_TOKEN)).thenReturn(true);
 
     assertThatThrownBy(() -> tokenService.refreshToken(PLAIN_TOKEN))
-        .isInstanceOf(ResponseStatusException.class)
-        .satisfies(
-            ex -> {
-              ResponseStatusException ex2 = (ResponseStatusException) ex;
-              assertThat(ex2.getStatusCode().value()).isEqualTo(401);
-              assertThat(ex2.getReason()).contains("Sesja wygasła");
-            });
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessageContaining("Sesja wygasła");
   }
 }
