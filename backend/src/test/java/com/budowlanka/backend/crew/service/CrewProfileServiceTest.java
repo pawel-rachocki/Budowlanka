@@ -209,7 +209,7 @@ class CrewProfileServiceTest {
     assertThat(response.phone()).isEqualTo("600100200");
     assertThat(response.contactEmail()).isEqualTo("test@example.com");
     assertThat(response.city()).isEqualTo("Warszawa");
-    assertThat(response.voivodeship()).isEqualTo("mazowieckie");
+    assertThat(response.voivodeship()).isEqualTo("MAZOWIECKIE");
   }
 
   @Test

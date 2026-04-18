@@ -255,7 +255,7 @@ public class CrewProfileService {
         includeContact ? profile.getPhone() : null,
         includeContact ? profile.getContactEmail() : null,
         profile.getCity(),
-        profile.getVoivodeship().getDisplayName(),
+        profile.getVoivodeship().name(),
         profile.getServiceRadiusKm(),
         profile.getNip(),
         profile.getAvgRating(),
@@ -272,7 +272,7 @@ public class CrewProfileService {
         profile.getCompanyName(),
         profile.getSlug(),
         profile.getCity(),
-        profile.getVoivodeship().getDisplayName(),
+        profile.getVoivodeship().name(),
         profile.getAvgRating(),
         profile.getReviewCount(),
         mapCategories(profile.getServiceCategories()));

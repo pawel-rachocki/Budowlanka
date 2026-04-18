@@ -131,7 +131,7 @@ class CrewProfileServiceSearchTest {
     assertThat(summary.companyName()).isEqualTo("Test Remonty");
     assertThat(summary.slug()).isEqualTo("test-remonty-warszawa");
     assertThat(summary.city()).isEqualTo("Warszawa");
-    assertThat(summary.voivodeship()).isEqualTo("mazowieckie");
+    assertThat(summary.voivodeship()).isEqualTo("MAZOWIECKIE");
     assertThat(summary.avgRating()).isEqualByComparingTo(BigDecimal.valueOf(4.5));
     assertThat(summary.reviewCount()).isEqualTo(10);
     assertThat(summary.serviceCategories()).hasSize(1);
