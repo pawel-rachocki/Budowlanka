@@ -8,6 +8,7 @@ import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import com.budowlanka.backend.photo.exception.InvalidImageException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -128,6 +129,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BlankFieldException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleBlankField(BlankFieldException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidImageException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleInvalidImage(InvalidImageException ex) {
     return ApiError.badRequest(ex.getMessage());
   }
 
