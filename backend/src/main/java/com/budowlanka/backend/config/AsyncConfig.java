@@ -17,7 +17,7 @@ public class AsyncConfig {
     executor.setCorePoolSize(2);
     executor.setMaxPoolSize(10);
     executor.setQueueCapacity(200);
-    executor.setThreadNamePrefix("async-mail-");
+    executor.setThreadNamePrefix("async-task-");
     executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
     executor.initialize();
     return executor;
