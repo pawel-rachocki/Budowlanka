@@ -9,6 +9,9 @@ import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
 import com.budowlanka.backend.photo.exception.InvalidImageException;
+import com.budowlanka.backend.photo.exception.PhotoLimitExceededException;
+import com.budowlanka.backend.photo.exception.PhotoNotFoundException;
+import com.budowlanka.backend.photo.exception.PhotoOwnershipException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -136,6 +139,24 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleInvalidImage(InvalidImageException ex) {
     return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handlePhotoNotFound(PhotoNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoOwnershipException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handlePhotoOwnership(PhotoOwnershipException ex) {
+    return ApiError.of(403, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoLimitExceededException.class)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+  public ApiError handlePhotoLimitExceeded(PhotoLimitExceededException ex) {
+    return ApiError.of(422, ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
