@@ -41,6 +41,8 @@ class PhotoServiceTest {
 
   // Minimal JPEG magic bytes — imageValidator is mocked so content doesn't matter
   private static final byte[] JPEG_BYTES = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
+  // Minimal PNG magic bytes (89 50 4E 47)
+  private static final byte[] PNG_BYTES = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x00};
 
   @Mock private CrewProfileRepository crewProfileRepository;
   @Mock private PortfolioPhotoRepository photoRepository;
@@ -100,6 +102,8 @@ class PhotoServiceTest {
     assertThat(response.caption()).isEqualTo("Kuchnia przed remontem");
     verify(s3StorageService).uploadObject(JPEG_BYTES, "crew/id/original.jpg", "image/jpeg");
     verify(s3StorageService).uploadObject(any(), eq("crew/id/thumb.jpg"), eq("image/jpeg"));
+    verify(photoModerationService, never()).moderateAsync(any());
+    triggerAfterCommit();
     verify(photoModerationService).moderateAsync(any());
   }
 
@@ -202,7 +206,7 @@ class PhotoServiceTest {
     List<PhotoResponse> result = service.listPublicBySlug(slug);
 
     assertThat(result).hasSize(1);
-    assertThat(result.getFirst().moderationStatus()).isEqualTo(ModerationStatus.APPROVED);
+    assertThat(result.getFirst().moderationStatus()).isNull(); // fromPublic hides moderation from public callers
   }
 
   // ── delete ───────────────────────────────────────────────────────────────
@@ -292,6 +296,81 @@ class PhotoServiceTest {
 
     verify(s3StorageService, never()).deleteObject(anyString());
     verify(photoRepository, never()).delete(any());
+  }
+
+  // ── upload: content type detection (W1) ──────────────────────────────────
+
+  @Test
+  void should_usePngContentType_when_pngBytesUploaded() throws Exception {
+    UUID userId = UUID.randomUUID();
+    UUID crewId = UUID.randomUUID();
+    CrewProfile crewProfile = mock(CrewProfile.class);
+    when(crewProfile.getId()).thenReturn(crewId);
+    when(crewProfileRepository.findByUserId(userId)).thenReturn(Optional.of(crewProfile));
+    when(photoRepository.countByCrewProfileId(crewId)).thenReturn(0L);
+    when(thumbnailService.generate(any())).thenReturn(new byte[] {1});
+    when(s3StorageService.buildKey(eq(crewId), any()))
+        .thenReturn("crew/id/original.jpg")
+        .thenReturn("crew/id/thumb.jpg");
+    when(photoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", PNG_BYTES);
+    service.upload(userId, file, null);
+
+    verify(s3StorageService).uploadObject(PNG_BYTES, "crew/id/original.jpg", "image/png");
+  }
+
+  // ── upload: moderation timing (W2) ───────────────────────────────────────
+
+  @Test
+  void should_notCallModerateAsync_before_commit_when_upload() throws Exception {
+    UUID userId = UUID.randomUUID();
+    UUID crewId = UUID.randomUUID();
+    CrewProfile crewProfile = mock(CrewProfile.class);
+    when(crewProfile.getId()).thenReturn(crewId);
+    when(crewProfileRepository.findByUserId(userId)).thenReturn(Optional.of(crewProfile));
+    when(photoRepository.countByCrewProfileId(crewId)).thenReturn(0L);
+    when(thumbnailService.generate(any())).thenReturn(new byte[] {1});
+    when(s3StorageService.buildKey(eq(crewId), any()))
+        .thenReturn("crew/id/original.jpg")
+        .thenReturn("crew/id/thumb.jpg");
+    when(photoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", JPEG_BYTES);
+    service.upload(userId, file, null);
+
+    verify(photoModerationService, never()).moderateAsync(any());
+
+    triggerAfterCommit();
+    verify(photoModerationService).moderateAsync(any());
+  }
+
+  // ── upload: S3 partial rollback (W3) ─────────────────────────────────────
+
+  @Test
+  void should_rollbackOriginalS3Upload_when_thumbnailUploadFails() throws Exception {
+    UUID userId = UUID.randomUUID();
+    UUID crewId = UUID.randomUUID();
+    CrewProfile crewProfile = mock(CrewProfile.class);
+    when(crewProfile.getId()).thenReturn(crewId);
+    when(crewProfileRepository.findByUserId(userId)).thenReturn(Optional.of(crewProfile));
+    when(photoRepository.countByCrewProfileId(crewId)).thenReturn(0L);
+    when(thumbnailService.generate(any())).thenReturn(new byte[] {1});
+    when(s3StorageService.buildKey(eq(crewId), any()))
+        .thenReturn("crew/id/original.jpg")
+        .thenReturn("crew/id/thumb.jpg");
+    when(s3StorageService.uploadObject(any(), anyString(), anyString()))
+        .thenReturn("crew/id/original.jpg")
+        .thenThrow(new RuntimeException("S3 unavailable"));
+
+    MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", JPEG_BYTES);
+
+    assertThatThrownBy(() -> service.upload(userId, file, null))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("S3 unavailable");
+
+    verify(s3StorageService).deleteObject("crew/id/original.jpg");
+    verify(photoRepository, never()).save(any());
   }
 
   @Test

@@ -67,7 +67,12 @@ public class PhotoService {
     String thumbKey = s3StorageService.buildKey(crewProfile.getId(), StorageKeySuffix.THUMB);
 
     s3StorageService.uploadObject(bytes, originalKey, detectContentType(bytes));
-    s3StorageService.uploadObject(thumb, thumbKey, "image/jpeg");
+    try {
+      s3StorageService.uploadObject(thumb, thumbKey, "image/jpeg");
+    } catch (Exception e) {
+      tryDeleteFromS3(originalKey);
+      throw e;
+    }
 
     PortfolioPhoto photo =
         PortfolioPhoto.builder()
@@ -78,9 +83,16 @@ public class PhotoService {
             .build();
 
     photo = photoRepository.save(photo);
-    photoModerationService.moderateAsync(photo.getId());
+    final UUID photoId = photo.getId();
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            photoModerationService.moderateAsync(photoId);
+          }
+        });
 
-    return PhotoResponse.from(photo);
+    return PhotoResponse.fromOwner(photo, s3StorageService);
   }
 
   @Transactional(readOnly = true)
@@ -88,7 +100,7 @@ public class PhotoService {
     CrewProfile crewProfile =
         crewProfileRepository.findByUserId(userId).orElseThrow(CrewProfileNotFoundException::new);
     return photoRepository.findByCrewProfileIdOrderByUploadedAtDesc(crewProfile.getId()).stream()
-        .map(PhotoResponse::from)
+        .map(p -> PhotoResponse.fromOwner(p, s3StorageService))
         .toList();
   }
 
@@ -99,7 +111,7 @@ public class PhotoService {
     return photoRepository
         .findByCrewProfileIdAndModerationStatus(crewProfile.getId(), ModerationStatus.APPROVED)
         .stream()
-        .map(PhotoResponse::from)
+        .map(p -> PhotoResponse.fromPublic(p, s3StorageService))
         .toList();
   }
 
@@ -136,7 +148,7 @@ public class PhotoService {
     try {
       return file.getBytes();
     } catch (IOException e) {
-      throw new RuntimeException("Błąd odczytu pliku.", e);
+      throw new IllegalStateException("Błąd odczytu pliku.", e);
     }
   }
 
@@ -144,7 +156,7 @@ public class PhotoService {
     try {
       return thumbnailService.generate(bytes);
     } catch (IOException e) {
-      throw new RuntimeException("Błąd generowania miniatury.", e);
+      throw new IllegalStateException("Błąd generowania miniatury.", e);
     }
   }
 
@@ -157,6 +169,13 @@ public class PhotoService {
   }
 
   private String detectContentType(byte[] bytes) {
-    return (bytes[0] & 0xFF) == 0xFF ? "image/jpeg" : "image/png";
+    if (bytes.length >= 4
+        && (bytes[0] & 0xFF) == 0x89
+        && bytes[1] == 0x50
+        && bytes[2] == 0x4E
+        && bytes[3] == 0x47) {
+      return "image/png";
+    }
+    return "image/jpeg";
   }
 }
