@@ -113,6 +113,53 @@ Response `200`:
 
 ---
 
+## Photos — `/api/crew/photos`
+
+### POST /api/crew/photos
+Auth: `Bearer {accessToken}` (rola CREW)
+Content-Type: `multipart/form-data`
+Parts: `file` (obraz JPEG/PNG/WebP, max 5 MB), `caption` (opcjonalny, string)
+Response `202`: `PhotoResponse` — zdjęcie przyjęte, moderacja w toku (`moderationStatus: PENDING`)
+Response `400`: nieprawidłowy typ pliku lub rozmiar
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `413`: plik przekracza 5 MB
+Response `422`: osiągnięto limit 20 zdjęć dla profilu
+
+### GET /api/crew/photos/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `List<PhotoResponse>` — wszystkie zdjęcia (każdy status moderacji), posortowane od najnowszych
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+### DELETE /api/crew/photos/{id}
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `204`: zdjęcie usunięte (plik z S3 usunięty po commicie transakcji)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zdjęcie nie należy do zalogowanej ekipy
+Response `404`: zdjęcie nie istnieje
+
+### GET /api/crew/profiles/{slug}/photos
+Auth: brak (publiczny)
+Response `200`: `List<PhotoResponse>` — tylko zdjęcia ze statusem `APPROVED`, pola `moderationStatus` i `moderationNote` są `null`
+Response `404`: profil ekipy nie istnieje
+
+`PhotoResponse`:
+```json
+{
+  "id": "uuid",
+  "url": "https://cdn.example.com/...",
+  "thumbnailUrl": "https://cdn.example.com/...",
+  "caption": "Remont kuchni",
+  "moderationStatus": "PENDING",
+  "moderationNote": null,
+  "uploadedAt": "2026-05-01T12:00:00Z"
+}
+```
+
+---
+
 ## Categories — `/api/categories`
 
 ### GET /api/categories

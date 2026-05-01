@@ -64,6 +64,14 @@ public class SecurityConfig {
                     .authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/crew/profiles/me")
                     .authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/crew/photos")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/photos/me")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/crew/photos/{id}")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/profiles/*/photos")
+                    .permitAll()
                     .anyRequest()
                     .authenticated());
     return http.build();

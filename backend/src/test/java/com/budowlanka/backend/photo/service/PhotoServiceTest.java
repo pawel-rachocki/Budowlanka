@@ -206,7 +206,8 @@ class PhotoServiceTest {
     List<PhotoResponse> result = service.listPublicBySlug(slug);
 
     assertThat(result).hasSize(1);
-    assertThat(result.getFirst().moderationStatus()).isNull(); // fromPublic hides moderation from public callers
+    assertThat(result.getFirst().moderationStatus())
+        .isNull(); // fromPublic hides moderation from public callers
   }
 
   // ── delete ───────────────────────────────────────────────────────────────
