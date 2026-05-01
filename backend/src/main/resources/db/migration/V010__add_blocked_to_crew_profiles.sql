@@ -1,0 +1,2 @@
+ALTER TABLE crew_profiles ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE crew_profiles ADD COLUMN block_reason TEXT;

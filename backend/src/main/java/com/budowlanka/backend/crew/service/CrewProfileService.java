@@ -163,7 +163,9 @@ public class CrewProfileService {
   @Transactional(readOnly = true)
   public Page<CrewProfileSummaryResponse> search(
       String city, Voivodeship voivodeship, UUID categoryId, Pageable pageable) {
-    Specification<CrewProfile> spec = Specification.where(CrewProfileSpecification.isVisible());
+    Specification<CrewProfile> spec =
+        Specification.where(CrewProfileSpecification.isVisible())
+            .and(CrewProfileSpecification.isNotBlocked());
 
     if (city != null && !city.isBlank()) {
       spec = spec.and(CrewProfileSpecification.hasCity(city.trim()));

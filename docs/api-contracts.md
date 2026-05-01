@@ -174,4 +174,78 @@ Response `200`:
 
 ---
 
+## Admin — `/api/admin`
+
+Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy
+
+### GET /api/admin/moderation/photos?status=PENDING&page=0&size=20
+Response `200`: `PagedResponse<PhotoModerationItemResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "originalUrl": "https://cdn.example.com/...",
+      "thumbnailUrl": "https://cdn.example.com/...",
+      "caption": "Remont kuchni",
+      "crewCompanyName": "Kowalski Remonty",
+      "crewSlug": "kowalski-remonty-warszawa",
+      "uploadedAt": "2026-05-01T12:00:00Z"
+    }
+  ],
+  "totalElements": 5,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+Response `403`: brak roli ADMIN
+
+### PUT /api/admin/moderation/photos/{id}
+Request: `{ "decision": "APPROVE" | "REJECT", "note": "..." }`
+- `note` wymagane przy `REJECT` (min. 5 znaków)
+Response `200`: `PhotoResponse`
+Response `403`: brak roli ADMIN
+Response `404`: zdjęcie nie istnieje
+Response `409`: zdjęcie już zmoderowane
+
+### GET /api/admin/crews?page=0&size=20&blocked=
+Parametr `blocked` opcjonalny: `true` — tylko zablokowane, `false` — tylko niezablokowane, brak — wszystkie
+Response `200`: `PagedResponse<AdminCrewResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "companyName": "Kowalski Remonty",
+      "slug": "kowalski-remonty-warszawa",
+      "city": "Warszawa",
+      "voivodeship": "MAZOWIECKIE",
+      "visible": true,
+      "blocked": false,
+      "blockReason": null,
+      "avgRating": 4.5,
+      "reviewCount": 12,
+      "ownerEmail": "kontakt@kowalski.pl",
+      "createdAt": "2026-05-01T12:00:00Z"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+Response `403`: brak roli ADMIN
+
+### PUT /api/admin/crews/{id}/block
+Request: `{ "blocked": true, "reason": "Naruszenie regulaminu" }` — `reason` wymagane przy `blocked=true` (min. 5 znaków)
+Response `200`: `AdminCrewResponse`
+- Przy `blocked=true`: profil znika z publicznego `GET /api/crew/profiles`
+Response `400`: błąd walidacji (brak reason przy blokowaniu)
+Response `403`: brak roli ADMIN
+Response `404`: profil nie istnieje
+
+---
+
 <!-- Kolejne endpointy dodawaj tutaj w miarę implementacji -->

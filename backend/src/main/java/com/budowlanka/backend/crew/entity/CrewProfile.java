@@ -72,6 +72,13 @@ public class CrewProfile {
   @Column(name = "is_visible", nullable = false)
   private boolean visible = false;
 
+  @Builder.Default
+  @Column(name = "blocked", nullable = false)
+  private boolean blocked = false;
+
+  @Column(name = "block_reason", columnDefinition = "TEXT")
+  private String blockReason;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
@@ -101,6 +108,18 @@ public class CrewProfile {
   public void updateRatingStats(BigDecimal newAvgRating, int newReviewCount) {
     this.avgRating = newAvgRating;
     this.reviewCount = newReviewCount;
+  }
+
+  public void block(String reason) {
+    this.blocked = true;
+    this.blockReason = reason;
+    this.visible = false;
+  }
+
+  public void unblock() {
+    this.blocked = false;
+    this.blockReason = null;
+    this.visible = true;
   }
 
   public void addServiceCategory(ServiceCategory category) {

@@ -21,6 +21,14 @@ public final class CrewProfileSpecification {
     return (root, query, cb) -> cb.equal(root.get("voivodeship"), voivodeship);
   }
 
+  public static Specification<CrewProfile> isNotBlocked() {
+    return (root, query, cb) -> cb.isFalse(root.get("blocked"));
+  }
+
+  public static Specification<CrewProfile> isBlocked(boolean blocked) {
+    return (root, query, cb) -> cb.equal(root.get("blocked"), blocked);
+  }
+
   public static Specification<CrewProfile> hasCategory(UUID categoryId) {
     return (root, query, cb) -> {
       query.distinct(true);
