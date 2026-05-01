@@ -248,6 +248,16 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
   }
 
   @Test
+  void should_return404_on_publicSlug_when_crewIsBlocked() throws Exception {
+    crewProfile.block("Naruszenie regulaminu");
+    crewProfileRepository.save(crewProfile);
+
+    mockMvc
+        .perform(get("/api/crew/profiles/" + crewProfile.getSlug()))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   void should_notAppearInPublicSearch_when_crewIsBlocked() throws Exception {
     mockMvc
         .perform(
