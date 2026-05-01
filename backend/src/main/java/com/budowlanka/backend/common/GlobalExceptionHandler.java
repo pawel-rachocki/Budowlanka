@@ -1,5 +1,6 @@
 package com.budowlanka.backend.common;
 
+import com.budowlanka.backend.admin.exception.PhotoAlreadyDecidedException;
 import com.budowlanka.backend.auth.exception.AdminRegistrationException;
 import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
 import com.budowlanka.backend.auth.exception.InvalidTokenException;
@@ -157,6 +158,12 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   public ApiError handlePhotoLimitExceeded(PhotoLimitExceededException ex) {
     return ApiError.of(422, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoAlreadyDecidedException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handlePhotoAlreadyDecided(PhotoAlreadyDecidedException ex) {
+    return ApiError.conflict(ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
