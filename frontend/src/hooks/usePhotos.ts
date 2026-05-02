@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { isAxiosError } from 'axios'
 import type { AxiosError } from 'axios'
 import { photosApi } from '../api/photos.api'
 import type { PhotoResponse, PublicPhotoResponse } from '../types/photo.types'
+import { extractErrorMessage } from '../utils/errorMessage'
 import { useAuth } from './useAuth'
 import { useToast } from './useToast'
 
 export function useCrewPhotos(slug: string | undefined) {
-  const { data, isLoading, error } = useQuery<PublicPhotoResponse[], AxiosError>({
+  const { data, isLoading, isFetching, error } = useQuery<PublicPhotoResponse[], AxiosError>({
     queryKey: ['photos', 'public', slug],
     queryFn: () => photosApi.listPublicPhotosBySlug(slug!).then((res) => res.data),
     enabled: !!slug,
@@ -17,6 +17,7 @@ export function useCrewPhotos(slug: string | undefined) {
   return {
     photos: data ?? [],
     isLoading,
+    isFetching,
     error,
   }
 }
@@ -24,7 +25,7 @@ export function useCrewPhotos(slug: string | undefined) {
 export function useMyPhotos() {
   const { user } = useAuth()
 
-  const { data, isLoading, error } = useQuery<PhotoResponse[], AxiosError>({
+  const { data, isLoading, isFetching, error } = useQuery<PhotoResponse[], AxiosError>({
     queryKey: ['photos', 'me'],
     queryFn: () => photosApi.listMyPhotos().then((res) => res.data),
     enabled: user?.role === 'CREW',
@@ -34,16 +35,9 @@ export function useMyPhotos() {
   return {
     photos: data ?? [],
     isLoading,
+    isFetching,
     error,
   }
-}
-
-function extractErrorMessage(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const msg = (err.response?.data as { message?: string })?.message
-    if (msg) return msg
-  }
-  return fallback
 }
 
 export function useUploadPhoto() {
@@ -69,6 +63,7 @@ export function useUploadPhoto() {
     },
   })
 
+  // Zwraca mutateAsync — caller musi obsłużyć odrzucony Promise (try/catch lub .catch())
   return {
     uploadPhoto: mutateAsync,
     isUploading: isPending,
