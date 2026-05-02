@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import PhotoGallery from '../components/photo/PhotoGallery'
 import { useAuth } from '../hooks/useAuth'
 import { useCrewProfile } from '../hooks/useCrewProfile'
+import { useCrewPhotos } from '../hooks/usePhotos'
 import { VOIVODESHIP_LABELS } from '../utils/voivodeships'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -20,6 +22,7 @@ export default function CrewProfilePage() {
   const { slug } = useParams<{ slug: string }>()
   const { profile, isLoading, error, refetch } = useCrewProfile(slug)
   const { user, isLoading: authLoading } = useAuth()
+  const { photos, isLoading: photosLoading } = useCrewPhotos(profile ? slug : undefined)
 
   const isLoggedIn = user !== null
   const is404 = error?.response?.status === 404
@@ -179,6 +182,16 @@ export default function CrewProfilePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Portfolio gallery ────────────────────────────────────────────── */}
+      {(photos.length > 0 || photosLoading) && (
+        <section
+          aria-label="Portfolio zdjęć"
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+        >
+          <PhotoGallery photos={photos} isLoading={photosLoading} />
+        </section>
+      )}
     </>
   )
 }
@@ -351,6 +364,17 @@ function SkeletonLayout() {
           {/* Right sidebar */}
           <div className="md:col-span-1">
             <div className="rounded-xl border border-navy-100 bg-surface-card p-5 h-52" />
+          </div>
+        </div>
+      </div>
+      {/* Gallery skeleton */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+        <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
+          <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-lg bg-navy-100" />
+            ))}
           </div>
         </div>
       </div>
