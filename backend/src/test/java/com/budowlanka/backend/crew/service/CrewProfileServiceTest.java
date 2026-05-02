@@ -17,10 +17,12 @@ import com.budowlanka.backend.crew.entity.ServiceCategory;
 import com.budowlanka.backend.crew.enums.Voivodeship;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
+import com.budowlanka.backend.crew.mapper.CrewProfileMapper;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import java.math.BigDecimal;
 import java.util.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,10 +41,76 @@ class CrewProfileServiceTest {
 
   @Mock private CrewProfileRepository crewProfileRepository;
   @Mock private ServiceCategoryRepository serviceCategoryRepository;
+  @Mock private CrewProfileMapper crewProfileMapper;
 
   @InjectMocks private CrewProfileService crewProfileService;
 
   private final Pageable defaultPageable = PageRequest.of(0, 20);
+
+  @BeforeEach
+  void setUp() {
+    lenient()
+        .when(crewProfileMapper.toResponse(any(CrewProfile.class)))
+        .thenAnswer(
+            inv -> {
+              CrewProfile p = inv.getArgument(0);
+              return new CrewProfileResponse(
+                  p.getId(),
+                  p.getCompanyName(),
+                  p.getSlug(),
+                  p.getDescription(),
+                  p.getPhone(),
+                  p.getContactEmail(),
+                  p.getCity(),
+                  p.getVoivodeship().name(),
+                  p.getServiceRadiusKm(),
+                  p.getNip(),
+                  p.getAvgRating(),
+                  p.getReviewCount(),
+                  p.isVisible(),
+                  List.of(),
+                  p.getCreatedAt(),
+                  p.getUpdatedAt());
+            });
+    lenient()
+        .when(crewProfileMapper.toResponsePublic(any(CrewProfile.class)))
+        .thenAnswer(
+            inv -> {
+              CrewProfile p = inv.getArgument(0);
+              return new CrewProfileResponse(
+                  p.getId(),
+                  p.getCompanyName(),
+                  p.getSlug(),
+                  p.getDescription(),
+                  null,
+                  null,
+                  p.getCity(),
+                  p.getVoivodeship().name(),
+                  p.getServiceRadiusKm(),
+                  p.getNip(),
+                  p.getAvgRating(),
+                  p.getReviewCount(),
+                  p.isVisible(),
+                  List.of(),
+                  p.getCreatedAt(),
+                  p.getUpdatedAt());
+            });
+    lenient()
+        .when(crewProfileMapper.toSummaryResponse(any(CrewProfile.class)))
+        .thenAnswer(
+            inv -> {
+              CrewProfile p = inv.getArgument(0);
+              return new CrewProfileSummaryResponse(
+                  p.getId(),
+                  p.getCompanyName(),
+                  p.getSlug(),
+                  p.getCity(),
+                  p.getVoivodeship().name(),
+                  p.getAvgRating(),
+                  p.getReviewCount(),
+                  List.of());
+            });
+  }
 
   // --- createProfile ---
 

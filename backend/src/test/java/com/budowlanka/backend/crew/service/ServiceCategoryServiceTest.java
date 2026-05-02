@@ -1,12 +1,16 @@
 package com.budowlanka.backend.crew.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.crew.dto.ServiceCategoryResponse;
 import com.budowlanka.backend.crew.entity.ServiceCategory;
+import com.budowlanka.backend.crew.mapper.ServiceCategoryMapper;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +21,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ServiceCategoryServiceTest {
 
   @Mock private ServiceCategoryRepository serviceCategoryRepository;
+  @Mock private ServiceCategoryMapper serviceCategoryMapper;
 
   @InjectMocks private ServiceCategoryService serviceCategoryService;
+
+  @BeforeEach
+  void setUp() {
+    lenient()
+        .when(serviceCategoryMapper.toResponse(any(ServiceCategory.class)))
+        .thenAnswer(
+            inv -> {
+              ServiceCategory c = inv.getArgument(0);
+              return new ServiceCategoryResponse(c.getId(), c.getName(), c.getSlug());
+            });
+  }
 
   @Test
   void should_returnAllCategoriesMappedToResponse_when_called() {

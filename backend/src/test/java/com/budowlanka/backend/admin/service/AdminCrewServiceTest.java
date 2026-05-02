@@ -3,11 +3,13 @@ package com.budowlanka.backend.admin.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.admin.dto.AdminCrewResponse;
 import com.budowlanka.backend.admin.dto.BlockCrewRequest;
+import com.budowlanka.backend.admin.mapper.AdminCrewMapper;
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.crew.entity.CrewProfile;
@@ -26,12 +28,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class AdminCrewServiceTest {
 
   @Mock private CrewProfileRepository crewProfileRepository;
+  @Mock private AdminCrewMapper adminCrewMapper;
 
   private AdminCrewService service;
 
   @BeforeEach
   void setUp() {
-    service = new AdminCrewService(crewProfileRepository);
+    service = new AdminCrewService(crewProfileRepository, adminCrewMapper);
+    lenient()
+        .when(adminCrewMapper.toResponse(any(CrewProfile.class)))
+        .thenAnswer(
+            inv -> {
+              CrewProfile p = inv.getArgument(0);
+              return new AdminCrewResponse(
+                  p.getId(),
+                  p.getCompanyName(),
+                  p.getSlug(),
+                  p.getCity(),
+                  p.getVoivodeship() != null ? p.getVoivodeship().name() : null,
+                  p.isVisible(),
+                  p.isBlocked(),
+                  p.getBlockReason(),
+                  p.getAvgRating(),
+                  p.getReviewCount(),
+                  p.getUser() != null ? p.getUser().getEmail() : null,
+                  p.getCreatedAt());
+            });
   }
 
   @Test

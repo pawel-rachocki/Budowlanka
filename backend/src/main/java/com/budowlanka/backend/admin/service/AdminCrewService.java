@@ -2,6 +2,7 @@ package com.budowlanka.backend.admin.service;
 
 import com.budowlanka.backend.admin.dto.AdminCrewResponse;
 import com.budowlanka.backend.admin.dto.BlockCrewRequest;
+import com.budowlanka.backend.admin.mapper.AdminCrewMapper;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
@@ -19,15 +20,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminCrewService {
 
   private final CrewProfileRepository crewProfileRepository;
+  private final AdminCrewMapper adminCrewMapper;
 
   @Transactional(readOnly = true)
   public Page<AdminCrewResponse> listCrews(Boolean blocked, Pageable pageable) {
     if (blocked != null) {
       return crewProfileRepository
           .findAllJoinUserByBlocked(blocked, pageable)
-          .map(AdminCrewResponse::from);
+          .map(adminCrewMapper::toResponse);
     }
-    return crewProfileRepository.findAllJoinUser(pageable).map(AdminCrewResponse::from);
+    return crewProfileRepository.findAllJoinUser(pageable).map(adminCrewMapper::toResponse);
   }
 
   @Transactional
@@ -48,6 +50,6 @@ public class AdminCrewService {
     }
 
     crewProfileRepository.save(profile);
-    return AdminCrewResponse.from(profile);
+    return adminCrewMapper.toResponse(profile);
   }
 }
