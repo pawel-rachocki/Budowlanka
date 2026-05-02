@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useMyCrewProfile } from '../hooks/useMyCrewProfile'
+import { useMyPhotos } from '../hooks/usePhotos'
 import CrewProfileForm from '../components/crew/CrewProfileForm'
+import PhotoUpload from '../components/photo/PhotoUpload'
 
 export default function CrewDashboardPage() {
   const { user } = useAuth()
   const { profile, isLoading, error, hasProfile, refetch } = useMyCrewProfile()
+  const { photos, isLoading: photosLoading } = useMyPhotos()
 
   if (isLoading) {
     return (
@@ -102,6 +105,19 @@ export default function CrewDashboardPage() {
 
           <CrewProfileForm profile={profile} onSuccess={() => void refetch()} />
         </div>
+
+        {/* Portfolio */}
+        {hasProfile && (
+          <div className="mt-6 rounded-xl border border-navy-100 bg-surface-card p-6 shadow-sm sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-navy-900">Portfolio</h2>
+              <p className="mt-1 text-sm text-navy-600">
+                Dodaj zdjęcia swoich realizacji — pojawią się na profilu po akceptacji przez moderatora.
+              </p>
+            </div>
+            <PhotoUpload currentCount={photos.length} disabled={photosLoading} />
+          </div>
+        )}
       </div>
     </div>
   )
