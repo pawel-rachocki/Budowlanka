@@ -118,12 +118,28 @@ export default function Navbar() {
             {user ? (
               <>
                 {user.role === 'CREW' && (
-                  <Link
+                  <NavLink
                     to="/dashboard"
-                    className="px-4 py-2 text-sm font-medium text-navy-700 hover:text-navy-900 transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className={({ isActive }) =>
+                      `px-4 py-2 text-sm font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        isActive ? 'text-brand-500 font-semibold' : 'text-navy-700 hover:text-navy-900'
+                      }`
+                    }
                   >
                     Mój profil
-                  </Link>
+                  </NavLink>
+                )}
+                {user.role === 'ADMIN' && (
+                  <NavLink
+                    to="/admin/moderation"
+                    className={({ isActive }) =>
+                      `px-4 py-2 text-sm font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        isActive ? 'text-brand-500 font-semibold' : 'text-navy-700 hover:text-navy-900'
+                      }`
+                    }
+                  >
+                    Panel admina
+                  </NavLink>
                 )}
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-navy-100">
                   <div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
@@ -196,13 +212,30 @@ export default function Navbar() {
                   <span className="text-sm text-navy-700 truncate">{user.email}</span>
                 </div>
                 {user.role === 'CREW' && (
-                  <Link
+                  <NavLink
                     to="/dashboard"
                     onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2.5 text-sm font-medium text-navy-700 hover:bg-surface rounded-lg transition-colors"
+                    className={({ isActive }) =>
+                      `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                        isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                      }`
+                    }
                   >
                     Mój profil
-                  </Link>
+                  </NavLink>
+                )}
+                {user.role === 'ADMIN' && (
+                  <NavLink
+                    to="/admin/moderation"
+                    onClick={() => setMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                        isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                      }`
+                    }
+                  >
+                    Panel admina
+                  </NavLink>
                 )}
                 <button
                   onClick={handleLogout}
