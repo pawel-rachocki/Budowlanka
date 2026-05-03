@@ -7,6 +7,7 @@ import CrewListPage from './pages/CrewListPage'
 import CrewProfilePage from './pages/CrewProfilePage'
 import CrewDashboardPage from './pages/CrewDashboardPage'
 import AdminModerationPage from './pages/admin/AdminModerationPage'
+import AdminCrewListPage from './pages/admin/AdminCrewListPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 import AdminLayout from './components/admin/AdminLayout'
@@ -51,7 +52,7 @@ function App() {
         <Route path="/admin" element={<Navigate to="/admin/moderation" replace />} />
         <Route element={<AdminLayout />}>
           <Route path="/admin/moderation" element={<AdminModerationPage />} />
-          <Route path="/admin/crews" element={<div className="p-8 text-navy-600">Zarządzanie ekipami (REM-105)</div>} />
+          <Route path="/admin/crews" element={<AdminCrewListPage />} />
         </Route>
       </Route>
 
