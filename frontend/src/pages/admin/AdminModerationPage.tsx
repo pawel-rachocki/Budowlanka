@@ -30,8 +30,11 @@ export default function AdminModerationPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
 
-  const { queue, totalElements, totalPages, isLoading, isFetching, error } =
-    useModerationQueue(activeTab, page, PAGE_SIZE)
+  const { queue, totalElements, totalPages, isLoading, isFetching, error } = useModerationQueue(
+    activeTab,
+    page,
+    PAGE_SIZE
+  )
 
   const { moderatePhoto, isSubmitting } = useModeratePhoto()
 
@@ -48,7 +51,10 @@ export default function AdminModerationPage() {
   }
 
   const handleApprove = (id: string) => {
-    moderatePhoto({ id, body: { decision: 'APPROVE' } }, { onSuccess: () => setLightboxIndex(null) })
+    moderatePhoto(
+      { id, body: { decision: 'APPROVE' } },
+      { onSuccess: () => setLightboxIndex(null) }
+    )
   }
 
   const handleRejectOpen = (id: string) => {
@@ -70,7 +76,7 @@ export default function AdminModerationPage() {
           handleRejectClose()
           setLightboxIndex(null)
         },
-      },
+      }
     )
   }
 
@@ -83,7 +89,7 @@ export default function AdminModerationPage() {
         caption: p.caption,
         uploadedAt: p.uploadedAt,
       })),
-    [queue],
+    [queue]
   )
 
   return (
@@ -172,9 +178,7 @@ export default function AdminModerationPage() {
               <ModalCloseIcon />
               <span className="sr-only">Zamknij</span>
             </Dialog.Close>
-            <Dialog.Title className="text-lg font-bold text-navy-900">
-              Odrzuć zdjęcie
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-bold text-navy-900">Odrzuć zdjęcie</Dialog.Title>
             <Dialog.Description className="mt-1 text-sm text-navy-600">
               Podaj powód odrzucenia. Notatka zostanie zapisana przy zdjęciu.
             </Dialog.Description>
@@ -194,9 +198,7 @@ export default function AdminModerationPage() {
                   placeholder="Opisz powód odrzucenia (np. treść nieodpowiednia, zdjęcie niezwiązane z usługami remontowymi...)"
                   className="w-full resize-none rounded-lg border border-navy-100 px-3 py-2.5 text-sm text-navy-900 placeholder:text-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 />
-                {errors.note && (
-                  <p className="mt-1 text-xs text-red-500">{errors.note.message}</p>
-                )}
+                {errors.note && <p className="mt-1 text-xs text-red-500">{errors.note.message}</p>}
               </div>
 
               <div className="flex gap-3">

@@ -46,9 +46,8 @@ export default function Select({
   // a Portal that's only in the DOM when the dropdown is open. When value is set programmatically
   // (e.g. via RHF reset) before the user has ever opened the dropdown, the trigger would be empty.
   // Passing the label as children bypasses the item registry lookup entirely.
-  const displayLabel = value !== undefined
-    ? options.find((o) => o.value === value)?.label
-    : undefined
+  const displayLabel =
+    value !== undefined ? options.find((o) => o.value === value)?.label : undefined
 
   const handleValueChange = (next: string) => {
     onChange(next === ALL_SENTINEL ? undefined : next)

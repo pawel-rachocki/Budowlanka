@@ -38,7 +38,10 @@ export default function PortfolioManager() {
       </div>
 
       <div className="border-b border-navy-100 px-6 py-5">
-        <PhotoUpload currentCount={photos.length} disabled={isLoading || photos.length >= MAX_PHOTOS} />
+        <PhotoUpload
+          currentCount={photos.length}
+          disabled={isLoading || photos.length >= MAX_PHOTOS}
+        />
       </div>
 
       <div className="px-6 py-5">
@@ -53,11 +56,7 @@ export default function PortfolioManager() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photos.map((photo) => (
-              <PhotoCard
-                key={photo.id}
-                photo={photo}
-                onDelete={() => setPhotoToDelete(photo)}
-              />
+              <PhotoCard key={photo.id} photo={photo} onDelete={() => setPhotoToDelete(photo)} />
             ))}
           </div>
         )}
@@ -71,9 +70,7 @@ export default function PortfolioManager() {
       >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-          <Dialog.Content
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none"
-          >
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none">
             <div className="w-full max-w-sm rounded-2xl bg-surface-card p-6 shadow-xl">
               <Dialog.Title className="text-base font-bold text-navy-900">
                 Usuń zdjęcie
@@ -146,9 +143,7 @@ function PhotoCard({ photo, onDelete }: PhotoCardProps) {
         <ModerationBadge status={photo.moderationStatus} />
       </div>
       <div className="flex flex-col gap-1.5 p-2.5">
-        {photo.caption && (
-          <p className="truncate text-xs text-navy-700">{photo.caption}</p>
-        )}
+        {photo.caption && <p className="truncate text-xs text-navy-700">{photo.caption}</p>}
         {photo.moderationStatus === 'REJECTED' && photo.moderationNote && (
           <p className="text-xs leading-tight text-red-600">{photo.moderationNote}</p>
         )}

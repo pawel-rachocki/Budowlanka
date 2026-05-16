@@ -20,21 +20,13 @@ const schema = z.object({
   phone: z.string().max(20, 'Maks. 20 znaków'),
   contactEmail: z
     .string()
-    .refine(
-      (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-      'Nieprawidłowy adres email'
-    ),
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Nieprawidłowy adres email'),
   city: z.string().min(1, 'Miasto jest wymagane').max(100, 'Maks. 100 znaków'),
   voivodeship: z.enum(VOIVODESHIPS, { error: 'Wybierz województwo' }),
   serviceRadiusKm: z
     .string()
-    .refine(
-      (v) => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 500),
-      'Podaj liczbę od 1 do 500'
-    ),
-  nip: z
-    .string()
-    .refine((v) => !v || /^\d{10}$/.test(v), 'NIP musi składać się z 10 cyfr'),
+    .refine((v) => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 500), 'Podaj liczbę od 1 do 500'),
+  nip: z.string().refine((v) => !v || /^\d{10}$/.test(v), 'NIP musi składać się z 10 cyfr'),
   categoryIds: z.array(z.string()),
 })
 
@@ -166,9 +158,7 @@ export default function CrewProfileForm({ profile, onSuccess }: CrewProfileFormP
               className={[
                 'w-full resize-none rounded-lg border px-3 py-2 text-sm text-navy-900 outline-none transition-colors placeholder:text-muted',
                 'focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20',
-                errors.description
-                  ? 'border-red-400 bg-red-50'
-                  : 'border-navy-100 bg-surface-card',
+                errors.description ? 'border-red-400 bg-red-50' : 'border-navy-100 bg-surface-card',
               ].join(' ')}
               {...register('description')}
             />
@@ -208,10 +198,7 @@ export default function CrewProfileForm({ profile, onSuccess }: CrewProfileFormP
 
         {/* Lokalizacja */}
         <section className="flex flex-col gap-4">
-          <SectionHeader
-            title="Lokalizacja"
-            subtitle="Miasto, z którego działasz i zasięg usług"
-          />
+          <SectionHeader title="Lokalizacja" subtitle="Miasto, z którego działasz i zasięg usług" />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
               label="Miasto *"

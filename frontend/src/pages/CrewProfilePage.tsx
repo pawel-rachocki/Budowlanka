@@ -62,10 +62,7 @@ export default function CrewProfilePage() {
               Portal
             </Link>
             <ChevronIcon />
-            <Link
-              to="/ekipy"
-              className="text-xs text-muted hover:text-navy-600 transition-colors"
-            >
+            <Link to="/ekipy" className="text-xs text-muted hover:text-navy-600 transition-colors">
               Ekipy remontowe
             </Link>
             <ChevronIcon />
@@ -95,7 +92,7 @@ export default function CrewProfilePage() {
       </header>
 
       {/* ── Main content ────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {/* ── Left: content ─────────────────────────────────────────── */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -181,6 +178,13 @@ export default function CrewProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── Portfolio gallery ─────────────────────────────────────────── */}
+        {(photos.length > 0 || photosLoading) && (
+          <div className="mt-6">
+            <PhotoGallery photos={photos} isLoading={photosLoading} />
+          </div>
+        )}
       </section>
 
       {/* ── Portfolio gallery ────────────────────────────────────────────── */}
@@ -246,9 +250,7 @@ function ContactCardBody({
   }
 
   if (phone == null && email == null) {
-    return (
-      <p className="text-sm text-muted italic">Ekipa nie podała danych kontaktowych.</p>
-    )
+    return <p className="text-sm text-muted italic">Ekipa nie podała danych kontaktowych.</p>
   }
 
   return (
@@ -281,11 +283,7 @@ function StarRating({ rating }: { rating: number }) {
   const filled = Math.round(rating)
   const label = rating === 0 ? 'Brak ocen' : `Ocena ${rating.toFixed(1)} na 5`
   return (
-    <div
-      className="flex gap-0.5"
-      aria-label={label}
-      role="img"
-    >
+    <div className="flex gap-0.5" aria-label={label} role="img">
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
@@ -327,7 +325,7 @@ function SkeletonLayout() {
         </div>
       </div>
       {/* Main skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 animate-pulse">
           {/* Left */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -364,6 +362,17 @@ function SkeletonLayout() {
           {/* Right sidebar */}
           <div className="md:col-span-1">
             <div className="rounded-xl border border-navy-100 bg-surface-card p-5 h-52" />
+          </div>
+        </div>
+        {/* Gallery skeleton */}
+        <div className="mt-6 animate-pulse">
+          <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
+            <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded-lg bg-navy-100" />
+              ))}
+            </div>
           </div>
         </div>
       </div>

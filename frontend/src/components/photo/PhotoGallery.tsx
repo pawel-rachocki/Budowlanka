@@ -14,9 +14,7 @@ export default function PhotoGallery({ photos, isLoading }: PhotoGalleryProps) {
 
   return (
     <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">
-        Portfolio
-      </h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Portfolio</h2>
 
       {isLoading ? (
         <GallerySkeleton />

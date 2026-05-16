@@ -23,9 +23,7 @@ export default function CrewDashboardPage() {
   if (error) {
     return (
       <div className="flex flex-1 items-center justify-center bg-surface py-20">
-        <p className="text-sm text-red-600">
-          Nie udało się załadować profilu. Odśwież stronę.
-        </p>
+        <p className="text-sm text-red-600">Nie udało się załadować profilu. Odśwież stronę.</p>
       </div>
     )
   }

@@ -30,14 +30,21 @@ export default function LightboxModal({ photos, initialIndex, onClose }: Lightbo
   if (total === 0 || !current) return null
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/85 data-[state=open]:animate-lightbox-in data-[state=closed]:animate-lightbox-out" />
 
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-0 z-50 flex items-center justify-center outline-none data-[state=open]:animate-lightbox-content-in data-[state=closed]:animate-lightbox-content-out"
-          onPointerDown={(e) => { if (e.target === e.currentTarget) onClose() }}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) onClose()
+          }}
           onTouchStart={(e) => {
             touchStartX.current = e.touches[0].clientX
           }}

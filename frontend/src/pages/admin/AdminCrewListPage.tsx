@@ -73,7 +73,7 @@ export default function AdminCrewListPage() {
     if (!blockTarget) return
     blockCrew(
       { id: blockTarget.id, body: { blocked: true, reason: data.reason } },
-      { onSuccess: handleBlockClose },
+      { onSuccess: handleBlockClose }
     )
   }
 
@@ -87,10 +87,7 @@ export default function AdminCrewListPage() {
 
   const handleUnblockConfirm = () => {
     if (!unblockTarget) return
-    blockCrew(
-      { id: unblockTarget.id, body: { blocked: false } },
-      { onSuccess: handleUnblockClose },
-    )
+    blockCrew({ id: unblockTarget.id, body: { blocked: false } }, { onSuccess: handleUnblockClose })
   }
 
   return (
@@ -190,9 +187,7 @@ export default function AdminCrewListPage() {
               placeholder="Opisz powód blokady (np. naruszenie regulaminu, fałszywe informacje...)"
               className="w-full resize-none rounded-lg border border-navy-100 px-3 py-2.5 text-sm text-navy-900 placeholder:text-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
-            {errors.reason && (
-              <p className="mt-1 text-xs text-red-500">{errors.reason.message}</p>
-            )}
+            {errors.reason && <p className="mt-1 text-xs text-red-500">{errors.reason.message}</p>}
           </div>
           <div className="flex gap-3">
             <button
@@ -220,8 +215,8 @@ export default function AdminCrewListPage() {
         title="Odblokuj ekipę"
         description={
           <>
-            <span className="font-medium text-navy-800">{unblockTarget?.companyName}</span> —
-            profil powróci do publicznego listingu.
+            <span className="font-medium text-navy-800">{unblockTarget?.companyName}</span> — profil
+            powróci do publicznego listingu.
           </>
         }
       >

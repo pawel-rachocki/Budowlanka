@@ -16,7 +16,9 @@ export default function AdminDialog({
   description,
   children,
 }: AdminDialogProps) {
-  const handleOpenChange = (open: boolean) => { if (!open) onClose() }
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onClose()
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -28,7 +30,9 @@ export default function AdminDialog({
             <span className="sr-only">Zamknij</span>
           </Dialog.Close>
           <Dialog.Title className="text-lg font-bold text-navy-900">{title}</Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-navy-600">{description}</Dialog.Description>
+          <Dialog.Description className="mt-1 text-sm text-navy-600">
+            {description}
+          </Dialog.Description>
           {children}
         </Dialog.Content>
       </Dialog.Portal>
