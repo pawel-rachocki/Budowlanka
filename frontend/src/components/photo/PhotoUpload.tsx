@@ -111,7 +111,9 @@ export default function PhotoUpload({ currentCount, onUploaded, disabled }: Phot
       <div className="flex items-baseline justify-between border-b border-navy-100 pb-3">
         <div>
           <h3 className="text-sm font-semibold text-navy-900">Zdjęcia portfolio</h3>
-          <p className="mt-0.5 text-xs text-muted">Zdjęcia realizacji widoczne na profilu po moderacji</p>
+          <p className="mt-0.5 text-xs text-muted">
+            Zdjęcia realizacji widoczne na profilu po moderacji
+          </p>
         </div>
         <span
           className={[
@@ -148,7 +150,8 @@ export default function PhotoUpload({ currentCount, onUploaded, disabled }: Phot
             style={
               !isDisabled && !dragOver
                 ? {
-                    backgroundImage: 'radial-gradient(circle, var(--color-navy-200) 1px, transparent 1px)',
+                    backgroundImage:
+                      'radial-gradient(circle, var(--color-navy-200) 1px, transparent 1px)',
                     backgroundSize: '22px 22px',
                   }
                 : undefined
@@ -190,7 +193,11 @@ export default function PhotoUpload({ currentCount, onUploaded, disabled }: Phot
           </div>
 
           {validationError && (
-            <p role="alert" aria-live="polite" className="flex items-center gap-1.5 text-xs text-red-500">
+            <p
+              role="alert"
+              aria-live="polite"
+              className="flex items-center gap-1.5 text-xs text-red-500"
+            >
               <AlertTriangleIcon />
               {validationError}
             </p>

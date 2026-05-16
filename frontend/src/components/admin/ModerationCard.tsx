@@ -61,9 +61,7 @@ export default function ModerationCard({
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex-1">
           {photo.caption && (
-            <p className="mb-1.5 line-clamp-2 text-sm font-medium text-navy-800">
-              {photo.caption}
-            </p>
+            <p className="mb-1.5 line-clamp-2 text-sm font-medium text-navy-800">{photo.caption}</p>
           )}
           <a
             href={`/ekipy/${photo.crewSlug}`}

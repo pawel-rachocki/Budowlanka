@@ -122,7 +122,9 @@ export default function Navbar() {
                     to="/dashboard"
                     className={({ isActive }) =>
                       `px-4 py-2 text-sm font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                        isActive ? 'text-brand-500 font-semibold' : 'text-navy-700 hover:text-navy-900'
+                        isActive
+                          ? 'text-brand-500 font-semibold'
+                          : 'text-navy-700 hover:text-navy-900'
                       }`
                     }
                   >
@@ -134,7 +136,9 @@ export default function Navbar() {
                     to="/admin/moderation"
                     className={({ isActive }) =>
                       `px-4 py-2 text-sm font-medium transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                        isActive ? 'text-brand-500 font-semibold' : 'text-navy-700 hover:text-navy-900'
+                        isActive
+                          ? 'text-brand-500 font-semibold'
+                          : 'text-navy-700 hover:text-navy-900'
                       }`
                     }
                   >
@@ -197,7 +201,9 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
                 `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                  isActive
+                    ? 'text-brand-500 font-semibold bg-surface'
+                    : 'text-navy-700 hover:bg-surface'
                 }`
               }
             >
@@ -217,7 +223,9 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className={({ isActive }) =>
                       `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                        isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                        isActive
+                          ? 'text-brand-500 font-semibold bg-surface'
+                          : 'text-navy-700 hover:bg-surface'
                       }`
                     }
                   >
@@ -230,7 +238,9 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className={({ isActive }) =>
                       `block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                        isActive ? 'text-brand-500 font-semibold bg-surface' : 'text-navy-700 hover:bg-surface'
+                        isActive
+                          ? 'text-brand-500 font-semibold bg-surface'
+                          : 'text-navy-700 hover:bg-surface'
                       }`
                     }
                   >

@@ -24,8 +24,7 @@ export default function CrewListPage() {
   const urlCity = searchParams.get('city') ?? ''
   const rawVoivodeship = searchParams.get('voivodeship')
   const urlVoivodeship: Voivodeship | undefined =
-    rawVoivodeship !== null &&
-    (VOIVODESHIPS_ORDERED as readonly string[]).includes(rawVoivodeship)
+    rawVoivodeship !== null && (VOIVODESHIPS_ORDERED as readonly string[]).includes(rawVoivodeship)
       ? (rawVoivodeship as Voivodeship)
       : undefined
   const urlCategoryId = searchParams.get('categoryId') || undefined
@@ -50,7 +49,7 @@ export default function CrewListPage() {
           next.delete('page')
           return next
         },
-        { replace: true },
+        { replace: true }
       )
     }, 400)
     return () => clearTimeout(timer)
@@ -91,11 +90,11 @@ export default function CrewListPage() {
             params.delete('page')
             return params
           },
-          { replace: true },
+          { replace: true }
         )
       }
     },
-    [urlVoivodeship, urlCategoryId, setSearchParams],
+    [urlVoivodeship, urlCategoryId, setSearchParams]
   )
 
   const handleReset = useCallback(() => {
@@ -112,7 +111,7 @@ export default function CrewListPage() {
         return next
       })
     },
-    [setSearchParams],
+    [setSearchParams]
   )
 
   const showGrid = !error
@@ -185,7 +184,11 @@ export default function CrewListPage() {
       {/* ── Results section ───────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Results status bar */}
-        <div className="flex items-center gap-2.5 mb-6 min-h-7" aria-live="polite" aria-atomic="true">
+        <div
+          className="flex items-center gap-2.5 mb-6 min-h-7"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {isLoading ? null : isFetching ? (
             <>
               <SpinnerIcon />
@@ -207,9 +210,7 @@ export default function CrewListPage() {
           <div className={showFetchingOverlay ? 'opacity-60 transition-opacity duration-150' : ''}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {showSkeletons
-                ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-                    <CrewCardSkeleton key={i} />
-                  ))
+                ? Array.from({ length: SKELETON_COUNT }).map((_, i) => <CrewCardSkeleton key={i} />)
                 : crews.map((crew) => <CrewCard key={crew.id} crew={crew} />)}
             </div>
 
@@ -257,13 +258,7 @@ function EmptyState() {
       {/* Tool illustration */}
       <div className="relative mb-6">
         <div className="w-20 h-20 rounded-2xl bg-brand-50 flex items-center justify-center">
-          <svg
-            width="40"
-            height="40"
-            viewBox="0 0 40 40"
-            fill="none"
-            aria-hidden="true"
-          >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
             {/* Wrench */}
             <path
               d="M28 6a6 6 0 0 0-5.93 7.07L8.5 26.64A2.5 2.5 0 1 0 12 30l13.57-13.57A6 6 0 1 0 28 6z"
@@ -274,10 +269,32 @@ function EmptyState() {
               className="text-brand-500"
             />
             {/* Magnifier */}
-            <circle cx="30" cy="30" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" className="text-navy-600" />
-            <path d="M34.5 34.5 L38 38" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.4" className="text-navy-600" />
+            <circle
+              cx="30"
+              cy="30"
+              r="6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeOpacity="0.4"
+              className="text-navy-600"
+            />
+            <path
+              d="M34.5 34.5 L38 38"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeOpacity="0.4"
+              className="text-navy-600"
+            />
             {/* Small sparkle */}
-            <path d="M8 8 L8 12 M6 10 L10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" className="text-brand-500" />
+            <path
+              d="M8 8 L8 12 M6 10 L10 10"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeOpacity="0.4"
+              className="text-brand-500"
+            />
           </svg>
         </div>
         <div
@@ -285,7 +302,12 @@ function EmptyState() {
           aria-hidden="true"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M18 6L6 18M6 6l12 12" stroke="#8ba0b4" strokeWidth="2.5" strokeLinecap="round" />
+            <path
+              d="M18 6L6 18M6 6l12 12"
+              stroke="#8ba0b4"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
           </svg>
         </div>
       </div>
