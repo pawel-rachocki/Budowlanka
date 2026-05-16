@@ -22,11 +22,14 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -164,6 +167,21 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.CONFLICT)
   public ApiError handlePhotoAlreadyDecided(PhotoAlreadyDecidedException ex) {
     return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+  public ApiError handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+    return ApiError.of(415, "Nieobsługiwany typ zawartości: " + ex.getContentType());
+  }
+
+  @ExceptionHandler({
+    MissingServletRequestPartException.class,
+    MissingServletRequestParameterException.class
+  })
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleMissingPart(Exception ex) {
+    return ApiError.of(400, "Brakujący parametr żądania: " + ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

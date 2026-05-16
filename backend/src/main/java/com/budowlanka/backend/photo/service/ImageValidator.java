@@ -26,10 +26,10 @@ public class ImageValidator {
   }
 
   private void checkMimeType(byte[] bytes) {
-    if (isJpeg(bytes) || isPng(bytes)) {
+    if (isJpeg(bytes) || isPng(bytes) || isWebp(bytes)) {
       return;
     }
-    throw new InvalidImageException("Niedozwolony format pliku. Akceptowane: JPEG, PNG.");
+    throw new InvalidImageException("Niedozwolony format pliku. Akceptowane: JPEG, PNG, WebP.");
   }
 
   private void checkFileSize(byte[] bytes) {
@@ -85,5 +85,17 @@ public class ImageValidator {
         && (bytes[1] & 0xFF) == 0x50
         && (bytes[2] & 0xFF) == 0x4E
         && (bytes[3] & 0xFF) == 0x47;
+  }
+
+  private boolean isWebp(byte[] bytes) {
+    return bytes.length >= 12
+        && (bytes[0] & 0xFF) == 0x52 // R
+        && (bytes[1] & 0xFF) == 0x49 // I
+        && (bytes[2] & 0xFF) == 0x46 // F
+        && (bytes[3] & 0xFF) == 0x46 // F
+        && (bytes[8] & 0xFF) == 0x57 // W
+        && (bytes[9] & 0xFF) == 0x45 // E
+        && (bytes[10] & 0xFF) == 0x42 // B
+        && (bytes[11] & 0xFF) == 0x50; // P
   }
 }

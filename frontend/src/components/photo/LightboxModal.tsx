@@ -37,6 +37,7 @@ export default function LightboxModal({ photos, initialIndex, onClose }: Lightbo
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-0 z-50 flex items-center justify-center outline-none data-[state=open]:animate-lightbox-content-in data-[state=closed]:animate-lightbox-content-out"
+          onPointerDown={(e) => { if (e.target === e.currentTarget) onClose() }}
           onTouchStart={(e) => {
             touchStartX.current = e.touches[0].clientX
           }}
