@@ -186,6 +186,16 @@ export default function CrewProfilePage() {
           </div>
         )}
       </section>
+
+      {/* ── Portfolio gallery ────────────────────────────────────────────── */}
+      {(photos.length > 0 || photosLoading) && (
+        <section
+          aria-label="Portfolio zdjęć"
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+        >
+          <PhotoGallery photos={photos} isLoading={photosLoading} />
+        </section>
+      )}
     </>
   )
 }
@@ -363,6 +373,17 @@ function SkeletonLayout() {
                 <div key={i} className="aspect-square rounded-lg bg-navy-100" />
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+      {/* Gallery skeleton */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+        <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
+          <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-lg bg-navy-100" />
+            ))}
           </div>
         </div>
       </div>
