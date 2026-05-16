@@ -47,6 +47,8 @@ CREATE TABLE crew_profiles (
     avg_rating        NUMERIC(3,2) DEFAULT 0,
     review_count      INT          NOT NULL DEFAULT 0,
     is_visible        BOOLEAN      NOT NULL DEFAULT FALSE,
+    blocked           BOOLEAN      NOT NULL DEFAULT FALSE,
+    block_reason      TEXT,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

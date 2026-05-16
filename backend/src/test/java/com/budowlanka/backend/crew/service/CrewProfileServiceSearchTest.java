@@ -6,16 +6,20 @@ import static org.mockito.Mockito.*;
 
 import com.budowlanka.backend.auth.entity.User;
 import com.budowlanka.backend.crew.dto.CrewProfileSummaryResponse;
+import com.budowlanka.backend.crew.dto.ServiceCategoryResponse;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.entity.ServiceCategory;
 import com.budowlanka.backend.crew.enums.Voivodeship;
+import com.budowlanka.backend.crew.mapper.CrewProfileMapper;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,10 +36,35 @@ class CrewProfileServiceSearchTest {
 
   @Mock private CrewProfileRepository crewProfileRepository;
   @Mock private ServiceCategoryRepository serviceCategoryRepository;
+  @Mock private CrewProfileMapper crewProfileMapper;
 
   @InjectMocks private CrewProfileService crewProfileService;
 
   private final Pageable defaultPageable = PageRequest.of(0, 20);
+
+  @BeforeEach
+  void setUp() {
+    lenient()
+        .when(crewProfileMapper.toSummaryResponse(any(CrewProfile.class)))
+        .thenAnswer(
+            inv -> {
+              CrewProfile p = inv.getArgument(0);
+              List<ServiceCategoryResponse> cats =
+                  p.getServiceCategories().stream()
+                      .map(c -> new ServiceCategoryResponse(c.getId(), c.getName(), c.getSlug()))
+                      .sorted(Comparator.comparing(ServiceCategoryResponse::name))
+                      .toList();
+              return new CrewProfileSummaryResponse(
+                  p.getId(),
+                  p.getCompanyName(),
+                  p.getSlug(),
+                  p.getCity(),
+                  p.getVoivodeship().name(),
+                  p.getAvgRating(),
+                  p.getReviewCount(),
+                  cats);
+            });
+  }
 
   @Test
   void should_returnVisibleProfiles_when_noFiltersApplied() {

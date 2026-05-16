@@ -10,6 +10,7 @@ import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import com.budowlanka.backend.crew.mapper.CrewProfileMapper;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import com.budowlanka.backend.crew.specification.CrewProfileSpecification;
@@ -38,6 +39,7 @@ public class CrewProfileService {
 
   private final CrewProfileRepository crewProfileRepository;
   private final ServiceCategoryRepository serviceCategoryRepository;
+  private final CrewProfileMapper crewProfileMapper;
 
   @Transactional
   public CrewProfileResponse createProfile(User user, CreateCrewProfileRequest req) {
@@ -69,7 +71,7 @@ public class CrewProfileService {
 
     crewProfileRepository.save(profile);
     log.info("Created crew profile slug={} for user={}", slug, user.getId());
-    return toResponse(profile);
+    return crewProfileMapper.toResponse(profile);
   }
 
   @Transactional
@@ -123,7 +125,7 @@ public class CrewProfileService {
 
     crewProfileRepository.save(profile);
     log.info("Updated crew profile id={}", profile.getId());
-    return toResponse(profile);
+    return crewProfileMapper.toResponse(profile);
   }
 
   /**
@@ -148,7 +150,9 @@ public class CrewProfileService {
       throw new CrewProfileNotFoundException();
     }
 
-    return toResponse(profile, /*includeContact*/ viewer != null);
+    return viewer != null
+        ? crewProfileMapper.toResponse(profile)
+        : crewProfileMapper.toResponsePublic(profile);
   }
 
   @Transactional(readOnly = true)
@@ -157,13 +161,15 @@ public class CrewProfileService {
         crewProfileRepository
             .findByUserId(user.getId())
             .orElseThrow(CrewProfileNotFoundException::new);
-    return toResponse(profile);
+    return crewProfileMapper.toResponse(profile);
   }
 
   @Transactional(readOnly = true)
   public Page<CrewProfileSummaryResponse> search(
       String city, Voivodeship voivodeship, UUID categoryId, Pageable pageable) {
-    Specification<CrewProfile> spec = Specification.where(CrewProfileSpecification.isVisible());
+    Specification<CrewProfile> spec =
+        Specification.where(CrewProfileSpecification.isVisible())
+            .and(CrewProfileSpecification.isNotBlocked());
 
     if (city != null && !city.isBlank()) {
       spec = spec.and(CrewProfileSpecification.hasCity(city.trim()));
@@ -175,7 +181,7 @@ public class CrewProfileService {
       spec = spec.and(CrewProfileSpecification.hasCategory(categoryId));
     }
 
-    return crewProfileRepository.findAll(spec, pageable).map(this::toSummaryResponse);
+    return crewProfileRepository.findAll(spec, pageable).map(crewProfileMapper::toSummaryResponse);
   }
 
   // --- private helpers ---
@@ -240,48 +246,5 @@ public class CrewProfileService {
       throw new BlankFieldException(fieldName);
     }
     return trimmed;
-  }
-
-  private CrewProfileResponse toResponse(CrewProfile profile) {
-    return toResponse(profile, true);
-  }
-
-  private CrewProfileResponse toResponse(CrewProfile profile, boolean includeContact) {
-    return new CrewProfileResponse(
-        profile.getId(),
-        profile.getCompanyName(),
-        profile.getSlug(),
-        profile.getDescription(),
-        includeContact ? profile.getPhone() : null,
-        includeContact ? profile.getContactEmail() : null,
-        profile.getCity(),
-        profile.getVoivodeship().name(),
-        profile.getServiceRadiusKm(),
-        profile.getNip(),
-        profile.getAvgRating(),
-        profile.getReviewCount(),
-        profile.isVisible(),
-        mapCategories(profile.getServiceCategories()),
-        profile.getCreatedAt(),
-        profile.getUpdatedAt());
-  }
-
-  private CrewProfileSummaryResponse toSummaryResponse(CrewProfile profile) {
-    return new CrewProfileSummaryResponse(
-        profile.getId(),
-        profile.getCompanyName(),
-        profile.getSlug(),
-        profile.getCity(),
-        profile.getVoivodeship().name(),
-        profile.getAvgRating(),
-        profile.getReviewCount(),
-        mapCategories(profile.getServiceCategories()));
-  }
-
-  private List<ServiceCategoryResponse> mapCategories(Set<ServiceCategory> categories) {
-    return categories.stream()
-        .map(c -> new ServiceCategoryResponse(c.getId(), c.getName(), c.getSlug()))
-        .sorted(Comparator.comparing(ServiceCategoryResponse::name))
-        .toList();
   }
 }

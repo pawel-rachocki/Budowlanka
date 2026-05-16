@@ -1,6 +1,7 @@
 package com.budowlanka.backend.crew.service;
 
 import com.budowlanka.backend.crew.dto.ServiceCategoryResponse;
+import com.budowlanka.backend.crew.mapper.ServiceCategoryMapper;
 import com.budowlanka.backend.crew.repository.ServiceCategoryRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class ServiceCategoryService {
   private final ServiceCategoryRepository serviceCategoryRepository;
+  private final ServiceCategoryMapper serviceCategoryMapper;
 
   @Cacheable("categories")
   @Transactional(readOnly = true)
   public List<ServiceCategoryResponse> getAll() {
     return serviceCategoryRepository.findAllByOrderByNameAsc().stream()
-        .map(c -> new ServiceCategoryResponse(c.getId(), c.getName(), c.getSlug()))
+        .map(serviceCategoryMapper::toResponse)
         .toList();
   }
 }

@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthLogoutIntegrationTest {
+class AuthLogoutIntegrationTest extends com.budowlanka.backend.IntegrationTestBase {
 
   @Autowired private MockMvc mockMvc;
   @Autowired private UserRepository userRepository;

@@ -113,6 +113,53 @@ Response `200`:
 
 ---
 
+## Photos — `/api/crew/photos`
+
+### POST /api/crew/photos
+Auth: `Bearer {accessToken}` (rola CREW)
+Content-Type: `multipart/form-data`
+Parts: `file` (obraz JPEG/PNG/WebP, max 5 MB), `caption` (opcjonalny, string)
+Response `202`: `PhotoResponse` — zdjęcie przyjęte, moderacja w toku (`moderationStatus: PENDING`)
+Response `400`: nieprawidłowy typ pliku lub rozmiar
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `413`: plik przekracza 5 MB
+Response `422`: osiągnięto limit 20 zdjęć dla profilu
+
+### GET /api/crew/photos/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `List<PhotoResponse>` — wszystkie zdjęcia (każdy status moderacji), posortowane od najnowszych
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+### DELETE /api/crew/photos/{id}
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `204`: zdjęcie usunięte (plik z S3 usunięty po commicie transakcji)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zdjęcie nie należy do zalogowanej ekipy
+Response `404`: zdjęcie nie istnieje
+
+### GET /api/crew/profiles/{slug}/photos
+Auth: brak (publiczny)
+Response `200`: `List<PhotoResponse>` — tylko zdjęcia ze statusem `APPROVED`, pola `moderationStatus` i `moderationNote` są `null`
+Response `404`: profil ekipy nie istnieje
+
+`PhotoResponse`:
+```json
+{
+  "id": "uuid",
+  "url": "https://cdn.example.com/...",
+  "thumbnailUrl": "https://cdn.example.com/...",
+  "caption": "Remont kuchni",
+  "moderationStatus": "PENDING",
+  "moderationNote": null,
+  "uploadedAt": "2026-05-01T12:00:00Z"
+}
+```
+
+---
+
 ## Categories — `/api/categories`
 
 ### GET /api/categories
@@ -124,6 +171,80 @@ Response `200`:
   { "id": "uuid", "name": "Tynkowanie", "slug": "tynkowanie" }
 ]
 ```
+
+---
+
+## Admin — `/api/admin`
+
+Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy
+
+### GET /api/admin/moderation/photos?status=PENDING&page=0&size=20
+Response `200`: `PagedResponse<PhotoModerationItemResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "originalUrl": "https://cdn.example.com/...",
+      "thumbnailUrl": "https://cdn.example.com/...",
+      "caption": "Remont kuchni",
+      "crewCompanyName": "Kowalski Remonty",
+      "crewSlug": "kowalski-remonty-warszawa",
+      "uploadedAt": "2026-05-01T12:00:00Z"
+    }
+  ],
+  "totalElements": 5,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+Response `403`: brak roli ADMIN
+
+### PUT /api/admin/moderation/photos/{id}
+Request: `{ "decision": "APPROVE" | "REJECT", "note": "..." }`
+- `note` wymagane przy `REJECT` (min. 5 znaków)
+Response `200`: `PhotoResponse`
+Response `403`: brak roli ADMIN
+Response `404`: zdjęcie nie istnieje
+Response `409`: zdjęcie już zmoderowane
+
+### GET /api/admin/crews?page=0&size=20&blocked=
+Parametr `blocked` opcjonalny: `true` — tylko zablokowane, `false` — tylko niezablokowane, brak — wszystkie
+Response `200`: `PagedResponse<AdminCrewResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "companyName": "Kowalski Remonty",
+      "slug": "kowalski-remonty-warszawa",
+      "city": "Warszawa",
+      "voivodeship": "MAZOWIECKIE",
+      "visible": true,
+      "blocked": false,
+      "blockReason": null,
+      "avgRating": 4.5,
+      "reviewCount": 12,
+      "ownerEmail": "kontakt@kowalski.pl",
+      "createdAt": "2026-05-01T12:00:00Z"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+Response `403`: brak roli ADMIN
+
+### PUT /api/admin/crews/{id}/block
+Request: `{ "blocked": true, "reason": "Naruszenie regulaminu" }` — `reason` wymagane przy `blocked=true` (min. 5 znaków)
+Response `200`: `AdminCrewResponse`
+- Przy `blocked=true`: profil znika z publicznego `GET /api/crew/profiles`
+Response `400`: błąd walidacji (brak reason przy blokowaniu)
+Response `403`: brak roli ADMIN
+Response `404`: profil nie istnieje
 
 ---
 

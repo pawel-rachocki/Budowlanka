@@ -1,5 +1,6 @@
 package com.budowlanka.backend.common;
 
+import com.budowlanka.backend.admin.exception.PhotoAlreadyDecidedException;
 import com.budowlanka.backend.auth.exception.AdminRegistrationException;
 import com.budowlanka.backend.auth.exception.EmailAlreadyExistsException;
 import com.budowlanka.backend.auth.exception.InvalidTokenException;
@@ -8,6 +9,10 @@ import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import com.budowlanka.backend.photo.exception.InvalidImageException;
+import com.budowlanka.backend.photo.exception.PhotoLimitExceededException;
+import com.budowlanka.backend.photo.exception.PhotoNotFoundException;
+import com.budowlanka.backend.photo.exception.PhotoOwnershipException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +22,14 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -129,6 +137,51 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ApiError handleBlankField(BlankFieldException ex) {
     return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidImageException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleInvalidImage(InvalidImageException ex) {
+    return ApiError.badRequest(ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handlePhotoNotFound(PhotoNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoOwnershipException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handlePhotoOwnership(PhotoOwnershipException ex) {
+    return ApiError.of(403, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoLimitExceededException.class)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+  public ApiError handlePhotoLimitExceeded(PhotoLimitExceededException ex) {
+    return ApiError.of(422, ex.getMessage());
+  }
+
+  @ExceptionHandler(PhotoAlreadyDecidedException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handlePhotoAlreadyDecided(PhotoAlreadyDecidedException ex) {
+    return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+  public ApiError handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+    return ApiError.of(415, "Nieobsługiwany typ zawartości: " + ex.getContentType());
+  }
+
+  @ExceptionHandler({
+    MissingServletRequestPartException.class,
+    MissingServletRequestParameterException.class
+  })
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleMissingPart(Exception ex) {
+    return ApiError.of(400, "Brakujący parametr żądania: " + ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
