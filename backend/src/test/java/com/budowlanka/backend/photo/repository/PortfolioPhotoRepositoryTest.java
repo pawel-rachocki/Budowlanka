@@ -12,6 +12,7 @@ import com.budowlanka.backend.photo.entity.PortfolioPhoto;
 import com.budowlanka.backend.photo.enums.ModerationStatus;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -28,6 +29,13 @@ class PortfolioPhotoRepositoryTest {
   @Autowired private PortfolioPhotoRepository photoRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private CrewProfileRepository crewProfileRepository;
+
+  @BeforeEach
+  void cleanUp() {
+    photoRepository.deleteAllInBatch();
+    crewProfileRepository.deleteAllInBatch();
+    userRepository.deleteAllInBatch();
+  }
 
   @Test
   void should_returnOnlyCrewPhotosNewestFirst_when_queryingByCrewProfileId()
