@@ -103,7 +103,8 @@ class PhotoControllerIntegrationTest extends IntegrationTestBase {
                 .header("Authorization", "Bearer " + crewToken))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.message").value("Niedozwolony format pliku. Akceptowane: JPEG, PNG, WebP."));
+            jsonPath("$.message")
+                .value("Niedozwolony format pliku. Akceptowane: JPEG, PNG, WebP."));
   }
 
   @Test
