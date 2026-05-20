@@ -73,8 +73,13 @@ public class ReviewService {
   }
 
   @Transactional
-  public ReviewResponse updateReview(User author, UUID reviewId, ReviewRequest req) {
+  public ReviewResponse updateReview(
+      User author, String crewSlug, UUID reviewId, ReviewRequest req) {
     Review review = reviewRepository.findById(reviewId).orElseThrow(ReviewNotFoundException::new);
+
+    if (!review.getCrewProfile().getSlug().equals(crewSlug)) {
+      throw new ReviewNotFoundException();
+    }
 
     if (!review.getAuthor().getId().equals(author.getId())) {
       throw new ReviewOwnershipException();
@@ -88,8 +93,12 @@ public class ReviewService {
   }
 
   @Transactional
-  public void deleteReview(User author, UUID reviewId) {
+  public void deleteReview(User author, String crewSlug, UUID reviewId) {
     Review review = reviewRepository.findById(reviewId).orElseThrow(ReviewNotFoundException::new);
+
+    if (!review.getCrewProfile().getSlug().equals(crewSlug)) {
+      throw new ReviewNotFoundException();
+    }
 
     if (!review.getAuthor().getId().equals(author.getId())) {
       throw new ReviewOwnershipException();

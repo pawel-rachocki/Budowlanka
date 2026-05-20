@@ -248,4 +248,68 @@ Response `404`: profil nie istnieje
 
 ---
 
+## Reviews — `/api/crew/profiles/{slug}/reviews`
+
+`ReviewResponse`:
+```json
+{
+  "id": "uuid",
+  "rating": 4,
+  "comment": "Świetna robota, polecam!",
+  "authorDisplayName": "jan@example.com",
+  "createdAt": "2026-05-20T10:00:00Z"
+}
+```
+
+### GET /api/crew/profiles/{slug}/reviews?page=0&size=20
+Auth: brak (publiczny)
+Response `200`: `PagedResponse<ReviewResponse>`
+```json
+{
+  "content": [ { "id": "uuid", "rating": 4, "comment": "Świetna robota!", "authorDisplayName": "jan@example.com", "createdAt": "2026-05-20T10:00:00Z" } ],
+  "totalElements": 5,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+Response `404`: profil nie istnieje lub jest ukryty/zablokowany
+
+### POST /api/crew/profiles/{slug}/reviews
+Auth: `Bearer {accessToken}` (rola CLIENT)
+Request:
+```json
+{ "rating": 4, "comment": "Bardzo solidna ekipa, polecam." }
+```
+- `rating`: wymagany, liczba całkowita 1–5
+- `comment`: opcjonalny, 10–1000 znaków, nie może składać się wyłącznie ze spacji
+
+Response `201`: `ReviewResponse`
+Response `400`: błąd walidacji
+Response `401`: brak lub nieprawidłowy token
+Response `403`: brak roli CLIENT
+Response `404`: profil nie istnieje lub jest ukryty/zablokowany
+Response `409`: użytkownik już wystawił opinię tej ekipie
+
+### PUT /api/crew/profiles/{slug}/reviews/{reviewId}
+Auth: `Bearer {accessToken}` (rola CLIENT, tylko właściciel opinii)
+Request:
+```json
+{ "rating": 5, "comment": "Po zastanowieniu — zasługują na 5 gwiazdek." }
+```
+Response `200`: `ReviewResponse`
+Response `400`: błąd walidacji
+Response `401`: brak lub nieprawidłowy token
+Response `403`: opinia nie należy do zalogowanego użytkownika
+Response `404`: opinia nie istnieje
+
+### DELETE /api/crew/profiles/{slug}/reviews/{reviewId}
+Auth: `Bearer {accessToken}` (rola CLIENT, tylko właściciel opinii)
+Response `204`
+Response `401`: brak lub nieprawidłowy token
+Response `403`: opinia nie należy do zalogowanego użytkownika
+Response `404`: opinia nie istnieje
+
+---
+
 <!-- Kolejne endpointy dodawaj tutaj w miarę implementacji -->

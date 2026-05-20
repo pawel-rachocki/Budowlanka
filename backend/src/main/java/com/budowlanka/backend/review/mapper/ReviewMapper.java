@@ -8,6 +8,15 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
 
-  @Mapping(source = "author.email", target = "authorDisplayName")
+  @Mapping(
+      target = "authorDisplayName",
+      expression = "java(maskEmail(review.getAuthor().getEmail()))")
   ReviewResponse toResponse(Review review);
+
+  default String maskEmail(String email) {
+    int at = email.indexOf('@');
+    if (at <= 0) return "Użytkownik";
+    String local = email.substring(0, at);
+    return local.substring(0, Math.min(3, local.length())) + "***";
+  }
 }
