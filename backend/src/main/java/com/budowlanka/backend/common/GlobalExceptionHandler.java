@@ -13,6 +13,9 @@ import com.budowlanka.backend.photo.exception.InvalidImageException;
 import com.budowlanka.backend.photo.exception.PhotoLimitExceededException;
 import com.budowlanka.backend.photo.exception.PhotoNotFoundException;
 import com.budowlanka.backend.photo.exception.PhotoOwnershipException;
+import com.budowlanka.backend.review.exception.DuplicateReviewException;
+import com.budowlanka.backend.review.exception.ReviewNotFoundException;
+import com.budowlanka.backend.review.exception.ReviewOwnershipException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -167,6 +170,24 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.CONFLICT)
   public ApiError handlePhotoAlreadyDecided(PhotoAlreadyDecidedException ex) {
     return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(ReviewNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handleReviewNotFound(ReviewNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(DuplicateReviewException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleDuplicateReview(DuplicateReviewException ex) {
+    return ApiError.conflict(ex.getMessage());
+  }
+
+  @ExceptionHandler(ReviewOwnershipException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleReviewOwnership(ReviewOwnershipException ex) {
+    return ApiError.of(403, ex.getMessage());
   }
 
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

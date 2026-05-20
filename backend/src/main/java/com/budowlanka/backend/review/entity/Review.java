@@ -32,10 +32,10 @@ public class Review {
   @JoinColumn(name = "author_user_id", nullable = false, updatable = false)
   private User author;
 
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false)
   private short rating;
 
-  @Column(columnDefinition = "TEXT", updatable = false)
+  @Column(columnDefinition = "TEXT")
   private String comment;
 
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -44,5 +44,10 @@ public class Review {
   @PrePersist
   protected void onCreate() {
     createdAt = Instant.now();
+  }
+
+  public void updateContent(short rating, String comment) {
+    this.rating = rating;
+    this.comment = comment;
   }
 }
