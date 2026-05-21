@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Table(name = "crew_profiles")
@@ -84,6 +85,12 @@ public class CrewProfile {
 
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
+
+  // Wyliczane przez Hibernate — nie istnieje jako kolumna w DB
+  @Formula(
+      "(EXISTS (SELECT 1 FROM crew_boosts cb"
+          + " WHERE cb.crew_profile_id = id AND cb.expires_at > NOW()))")
+  private boolean hasActiveBoost;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(

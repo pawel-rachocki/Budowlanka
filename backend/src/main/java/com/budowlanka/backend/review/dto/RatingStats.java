@@ -1,4 +1,5 @@
 package com.budowlanka.backend.review.dto;
 
-public record RatingStats(Double avgRating, Long reviewCount) {}
+import java.math.BigDecimal;
 
+public record RatingStats(BigDecimal avgRating, Long reviewCount) {}

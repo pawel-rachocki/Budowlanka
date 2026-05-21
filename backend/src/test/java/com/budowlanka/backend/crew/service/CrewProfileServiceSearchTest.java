@@ -2,6 +2,7 @@ package com.budowlanka.backend.crew.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 import com.budowlanka.backend.auth.entity.User;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,88 +71,88 @@ class CrewProfileServiceSearchTest {
   @Test
   void should_returnVisibleProfiles_when_noFiltersApplied() {
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search(null, null, null, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_filterByCity_when_cityProvided() {
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search("Warszawa", null, null, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_filterByVoivodeship_when_voivodeshipProvided() {
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search(null, Voivodeship.MAZOWIECKIE, null, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_filterByCategoryId_when_categoryIdProvided() {
     UUID categoryId = UUID.randomUUID();
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search(null, null, categoryId, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_combineAllFilters_when_allProvided() {
     UUID categoryId = UUID.randomUUID();
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search("Kraków", Voivodeship.MALOPOLSKIE, categoryId, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_ignoreBlankCity_when_blankCityProvided() {
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
         crewProfileService.search("   ", null, null, defaultPageable);
 
     assertThat(result.getTotalElements()).isEqualTo(1);
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   @Test
   void should_mapToSummaryResponse_when_resultsFound() {
     CrewProfile profile = buildProfile();
     Page<CrewProfile> page = new PageImpl<>(List.of(profile), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
@@ -170,7 +172,7 @@ class CrewProfileServiceSearchTest {
   @Test
   void should_returnEmptyPage_when_noResults() {
     Page<CrewProfile> emptyPage = Page.empty(defaultPageable);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(emptyPage);
 
     Page<CrewProfileSummaryResponse> result =
@@ -184,7 +186,7 @@ class CrewProfileServiceSearchTest {
   void should_respectPagination_when_customPageableProvided() {
     Pageable customPageable = PageRequest.of(2, 5);
     Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), customPageable, 15);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(customPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
@@ -194,6 +196,50 @@ class CrewProfileServiceSearchTest {
     assertThat(result.getSize()).isEqualTo(5);
     assertThat(result.getTotalElements()).isEqualTo(15);
     assertThat(result.getTotalPages()).isEqualTo(3);
+    verify(crewProfileRepository)
+        .findAll(
+            any(Specification.class),
+            argThat(
+                (Pageable p) ->
+                    p.getPageNumber() == 2 && p.getPageSize() == 5 && !p.getSort().isUnsorted()));
+  }
+
+  @Test
+  void should_applyRankingSort_when_pageableIsUnsorted() {
+    Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), defaultPageable, 1);
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
+        .thenReturn(page);
+
+    crewProfileService.search(null, null, null, defaultPageable);
+
+    verify(crewProfileRepository)
+        .findAll(
+            any(Specification.class),
+            argThat(
+                (Pageable p) -> {
+                  List<Sort.Order> orders = p.getSort().toList();
+                  return orders.size() == 3
+                      && "hasActiveBoost".equals(orders.get(0).getProperty())
+                      && orders.get(0).isDescending()
+                      && "avgRating".equals(orders.get(1).getProperty())
+                      && orders.get(1).isDescending()
+                      && "reviewCount".equals(orders.get(2).getProperty())
+                      && orders.get(2).isDescending();
+                }));
+  }
+
+  @Test
+  void should_preserveExplicitSort_when_sortProvided() {
+    Sort customSort = Sort.by(Sort.Order.asc("avgRating"));
+    Pageable sortedPageable = PageRequest.of(0, 20, customSort);
+    Page<CrewProfile> page = new PageImpl<>(List.of(buildProfile()), sortedPageable, 1);
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
+        .thenReturn(page);
+
+    crewProfileService.search(null, null, null, sortedPageable);
+
+    verify(crewProfileRepository)
+        .findAll(any(Specification.class), argThat((Pageable p) -> p.getSort().equals(customSort)));
   }
 
   // --- helper ---

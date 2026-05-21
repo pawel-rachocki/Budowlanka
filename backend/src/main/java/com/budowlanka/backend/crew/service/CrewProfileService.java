@@ -20,7 +20,9 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,12 @@ public class CrewProfileService {
   private static final Pattern EDGE_HYPHENS = Pattern.compile("^-|-$");
   private static final Map<Character, String> POLISH_CHARS = Map.of('ł', "l", 'Ł', "l");
   private static final Set<String> RESERVED_SLUGS = Set.of("me", "admin", "api", "new");
+
+  private static final Sort RANKING_SORT =
+      Sort.by(
+          Sort.Order.desc("hasActiveBoost"),
+          Sort.Order.desc("avgRating"),
+          Sort.Order.desc("reviewCount"));
 
   private final CrewProfileRepository crewProfileRepository;
   private final ServiceCategoryRepository serviceCategoryRepository;
@@ -181,7 +189,12 @@ public class CrewProfileService {
       spec = spec.and(CrewProfileSpecification.hasCategory(categoryId));
     }
 
-    return crewProfileRepository.findAll(spec, pageable).map(crewProfileMapper::toSummaryResponse);
+    Pageable ranked =
+        pageable.getSort().isUnsorted()
+            ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), RANKING_SORT)
+            : pageable;
+
+    return crewProfileRepository.findAll(spec, ranked).map(crewProfileMapper::toSummaryResponse);
   }
 
   // --- private helpers ---

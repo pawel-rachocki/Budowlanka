@@ -25,7 +25,8 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
       @Param("crewProfileId") UUID crewProfileId, Pageable pageable);
 
   @Query(
-      "SELECT new com.budowlanka.backend.review.dto.RatingStats(AVG(r.rating), COUNT(r))"
+      "SELECT new com.budowlanka.backend.review.dto.RatingStats("
+          + "CAST(AVG(r.rating) AS BigDecimal), COUNT(r))"
           + " FROM Review r WHERE r.crewProfile.id = :crewProfileId")
   RatingStats calculateStats(@Param("crewProfileId") UUID crewProfileId);
 }
