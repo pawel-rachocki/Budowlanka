@@ -127,7 +127,7 @@ public class ReviewService {
     RatingStats stats = reviewRepository.calculateStats(crewProfileId);
     BigDecimal avg =
         stats.avgRating() != null
-            ? stats.avgRating().setScale(2, RoundingMode.HALF_UP)
+            ? BigDecimal.valueOf(stats.avgRating()).setScale(2, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
     int count = stats.reviewCount() != null ? stats.reviewCount().intValue() : 0;
 
