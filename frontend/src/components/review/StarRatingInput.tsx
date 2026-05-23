@@ -7,7 +7,6 @@ interface StarRatingInputProps {
   disabled?: boolean
 }
 
-
 export function StarRatingInput({ value, onChange, disabled = false }: StarRatingInputProps) {
   const [hoverValue, setHoverValue] = useState(0)
 
@@ -65,12 +64,7 @@ export function StarRatingInput({ value, onChange, disabled = false }: StarRatin
               if (e.key === 'ArrowLeft') onChange(Math.max(1, value - 1))
             }}
           >
-            <svg
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-7 w-7"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 16 16" fill="currentColor" className="h-7 w-7" aria-hidden="true">
               <path d={STAR_PATH} />
             </svg>
           </button>

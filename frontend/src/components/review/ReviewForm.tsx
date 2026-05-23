@@ -86,9 +86,7 @@ export function ReviewForm({ slug, review, onSuccess, onCancel }: ReviewFormProp
           placeholder="Opisz swoje doświadczenie z tą ekipą…"
           className="w-full rounded-lg border border-navy-100 bg-white px-3 py-2 text-sm text-navy-900 placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
         />
-        {errors.comment && (
-          <p className="text-xs text-red-500">{errors.comment.message}</p>
-        )}
+        {errors.comment && <p className="text-xs text-red-500">{errors.comment.message}</p>}
       </div>
 
       <div className="flex items-center gap-2 pt-1">

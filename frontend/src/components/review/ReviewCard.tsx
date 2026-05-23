@@ -10,7 +10,13 @@ interface ReviewCardProps {
   onDelete: () => void
 }
 
-export function ReviewCard({ review, isOwner, isDeleting = false, onEdit, onDelete }: ReviewCardProps) {
+export function ReviewCard({
+  review,
+  isOwner,
+  isDeleting = false,
+  onEdit,
+  onDelete,
+}: ReviewCardProps) {
   const initials = (review.authorDisplayName.slice(0, 2) || '??').toUpperCase()
 
   return (

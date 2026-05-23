@@ -85,4 +85,3 @@ export interface CrewSearchParams {
   page?: number
   size?: number
 }
-

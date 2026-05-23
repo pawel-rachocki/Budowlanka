@@ -61,18 +61,14 @@ export function ReviewList({ slug, currentUserEmail, currentUserRole }: ReviewLi
           <StarPlaceholderIcon />
           <p className="mt-3 text-sm font-medium text-navy-700">Brak opinii — bądź pierwszy!</p>
         </div>
-        {canAddReview && (
-          <ReviewForm slug={slug} onSuccess={() => setPage(0)} />
-        )}
+        {canAddReview && <ReviewForm slug={slug} onSuccess={() => setPage(0)} />}
       </div>
     )
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {canAddReview && !editingReview && (
-        <ReviewForm slug={slug} onSuccess={() => setPage(0)} />
-      )}
+      {canAddReview && !editingReview && <ReviewForm slug={slug} onSuccess={() => setPage(0)} />}
       {reviews.map((review) => {
         const isOwner = currentUserEmail !== null && review.authorDisplayName === currentUserEmail
 

@@ -393,7 +393,10 @@ function SkeletonLayout() {
         <div className="h-3 w-24 rounded bg-navy-100 mb-4" />
         <div className="flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-4">
+            <div
+              key={i}
+              className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-4"
+            >
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 shrink-0 rounded-full bg-navy-100" />
                 <div className="flex flex-1 flex-col gap-2">
