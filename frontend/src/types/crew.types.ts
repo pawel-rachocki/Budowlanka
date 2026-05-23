@@ -51,6 +51,7 @@ export interface CrewProfileSummaryResponse {
   avgRating: number
   reviewCount: number
   serviceCategories: ServiceCategoryResponse[]
+  boosted?: boolean
 }
 
 export interface CreateCrewProfileRequest {

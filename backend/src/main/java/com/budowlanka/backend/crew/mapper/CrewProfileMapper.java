@@ -27,6 +27,7 @@ public interface CrewProfileMapper {
 
   @Mapping(target = "voivodeship", expression = "java(profile.getVoivodeship().name())")
   @Mapping(target = "serviceCategories", qualifiedByName = "sortedCategories")
+  @Mapping(target = "boosted", source = "hasActiveBoost")
   CrewProfileSummaryResponse toSummaryResponse(CrewProfile profile);
 
   @Named("sortedCategories")

@@ -12,4 +12,5 @@ public record CrewProfileSummaryResponse(
     String voivodeship,
     BigDecimal avgRating,
     int reviewCount,
-    List<ServiceCategoryResponse> serviceCategories) {}
+    List<ServiceCategoryResponse> serviceCategories,
+    boolean boosted) {}
