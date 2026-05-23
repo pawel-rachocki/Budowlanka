@@ -36,13 +36,17 @@ export function useAddReview(slug: string) {
       showToast('Opinia dodana', 'success')
     },
     onError: (err) => {
-      showToast(extractErrorMessage(err, 'Nie udało się dodać opinii'), 'error')
+      const message =
+        err.response?.status === 409
+          ? 'Już wystawiłeś opinię tej ekipie'
+          : extractErrorMessage(err, 'Nie udało się dodać opinii')
+      showToast(message, 'error')
     },
   })
 
   // Zwraca mutateAsync — caller musi obsłużyć odrzucony Promise (try/catch lub .catch()).
   // onError już wyświetla toast; catch służy wyłącznie do cleanup, nie do kolejnego komunikatu błędu.
-  // error?.response?.status === 409 oznacza duplikat opinii (użytkownik już ocenił tę ekipę).
+  // onError obsługuje 409 wewnętrznie — caller nie musi sprawdzać statusu.
   return {
     addReview: mutateAsync,
     isAdding: isPending,

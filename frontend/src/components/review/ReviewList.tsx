@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCrewReviews, useDeleteReview } from '../../hooks/useReviews'
+import type { User } from '../../types/auth.types'
 import type { ReviewResponse } from '../../types/review.types'
 import Pagination from '../Pagination'
 import { ReviewCard } from './ReviewCard'
@@ -8,14 +9,26 @@ import { ReviewForm } from './ReviewForm'
 interface ReviewListProps {
   slug: string
   currentUserEmail: string | null
+  currentUserRole: User['role'] | null
 }
 
-export function ReviewList({ slug, currentUserEmail }: ReviewListProps) {
+export function ReviewList({ slug, currentUserEmail, currentUserRole }: ReviewListProps) {
   const [page, setPage] = useState(0)
   const [editingReview, setEditingReview] = useState<ReviewResponse | null>(null)
 
   const { reviews, totalPages, isLoading, isFetching, error, refetch } = useCrewReviews(slug, page)
   const { deleteReview, isDeleting } = useDeleteReview(slug)
+
+  // authorDisplayName to email użytkownika (per API contract) — porównanie jest celowe.
+  // Przy dodaniu authorId do ReviewResponse zamienić na porównanie ID.
+  const userOwnReview =
+    currentUserEmail !== null
+      ? (reviews.find((r) => r.authorDisplayName === currentUserEmail) ?? null)
+      : null
+
+  // Sprawdzamy tylko aktualną stronę — edge case (opinia na innej stronie) obsługuje toast 409 w useAddReview.
+  const canAddReview =
+    currentUserRole === 'CLIENT' && currentUserEmail !== null && userOwnReview === null
 
   function handlePageChange(nextPage: number) {
     setPage(nextPage)
@@ -43,15 +56,23 @@ export function ReviewList({ slug, currentUserEmail }: ReviewListProps) {
 
   if (reviews.length === 0) {
     return (
-      <div className="rounded-xl border border-navy-100 bg-surface-card p-8 text-center">
-        <StarPlaceholderIcon />
-        <p className="mt-3 text-sm font-medium text-navy-700">Brak opinii — bądź pierwszy!</p>
+      <div className="flex flex-col gap-3">
+        <div className="rounded-xl border border-navy-100 bg-surface-card p-8 text-center">
+          <StarPlaceholderIcon />
+          <p className="mt-3 text-sm font-medium text-navy-700">Brak opinii — bądź pierwszy!</p>
+        </div>
+        {canAddReview && (
+          <ReviewForm slug={slug} onSuccess={() => setPage(0)} />
+        )}
       </div>
     )
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {canAddReview && !editingReview && (
+        <ReviewForm slug={slug} onSuccess={() => setPage(0)} />
+      )}
       {reviews.map((review) => {
         const isOwner = currentUserEmail !== null && review.authorDisplayName === currentUserEmail
 
