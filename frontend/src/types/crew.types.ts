@@ -1,4 +1,7 @@
 import type { ServiceCategoryResponse } from './category.types'
+import type { Page } from './api.types'
+
+export type { Page }
 
 export type Voivodeship =
   | 'DOLNOSLASKIE'
@@ -82,10 +85,3 @@ export interface CrewSearchParams {
   size?: number
 }
 
-export interface Page<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
