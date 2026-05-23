@@ -5,11 +5,12 @@ import { StarRating } from './StarRating'
 interface ReviewCardProps {
   review: ReviewResponse
   isOwner: boolean
+  isDeleting?: boolean
   onEdit: () => void
   onDelete: () => void
 }
 
-export function ReviewCard({ review, isOwner, onEdit, onDelete }: ReviewCardProps) {
+export function ReviewCard({ review, isOwner, isDeleting = false, onEdit, onDelete }: ReviewCardProps) {
   const initials = (review.authorDisplayName.slice(0, 2) || '??').toUpperCase()
 
   return (
@@ -39,18 +40,20 @@ export function ReviewCard({ review, isOwner, onEdit, onDelete }: ReviewCardProp
                 <button
                   type="button"
                   onClick={onEdit}
+                  disabled={isDeleting}
                   aria-label="Edytuj opinię"
-                  className="rounded text-xs text-navy-600 transition-colors hover:text-navy-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="rounded text-xs text-navy-600 transition-colors hover:text-navy-900 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   Edytuj
                 </button>
                 <button
                   type="button"
                   onClick={onDelete}
+                  disabled={isDeleting}
                   aria-label="Usuń opinię"
-                  className="rounded text-xs text-red-500 transition-colors hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  className="rounded text-xs text-red-500 transition-colors hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                 >
-                  Usuń
+                  {isDeleting ? 'Usuwanie…' : 'Usuń'}
                 </button>
               </div>
             )}

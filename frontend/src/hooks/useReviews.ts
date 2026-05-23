@@ -6,7 +6,7 @@ import { extractErrorMessage } from '../utils/errorMessage'
 import { useToast } from './useToast'
 
 export function useCrewReviews(slug: string | undefined, page = 0) {
-  const { data, isLoading, isFetching, error } = useQuery<PagedReviews, AxiosError>({
+  const { data, isLoading, isFetching, error, refetch } = useQuery<PagedReviews, AxiosError>({
     queryKey: ['reviews', slug, page],
     queryFn: () => reviewsApi.getReviews(slug!, page).then((res) => res.data),
     enabled: !!slug,
@@ -20,6 +20,7 @@ export function useCrewReviews(slug: string | undefined, page = 0) {
     isLoading,
     isFetching,
     error,
+    refetch,
   }
 }
 
