@@ -4,6 +4,7 @@ import com.budowlanka.backend.review.dto.ReviewResponse;
 import com.budowlanka.backend.review.entity.Review;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
@@ -13,6 +14,7 @@ public interface ReviewMapper {
       expression = "java(maskEmail(review.getAuthor().getEmail()))")
   ReviewResponse toResponse(Review review);
 
+  @Named("maskEmail")
   default String maskEmail(String email) {
     int at = email.indexOf('@');
     if (at <= 0) return "Użytkownik";
