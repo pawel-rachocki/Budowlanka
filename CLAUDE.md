@@ -23,7 +23,7 @@ Monorepo: backend (Java/Spring Boot) + frontend (React/TypeScript).
 - Frontend dev: `cd frontend && npm run dev`
 - Frontend build: `cd frontend && npm run build`
 - Frontend lint: `cd frontend && npm run lint`
-- Frontend typecheck: `cd frontend && npx tsc --noEmit`
+- Frontend typecheck: `cd frontend && npx tsc -b` (NIE `tsc --noEmit` — root tsconfig ma `files:[]`, więc `--noEmit` nic nie sprawdza)
 - Baza lokalna: `cd infra && docker compose up -d`
 
 ## Struktura kodu

@@ -10,7 +10,7 @@ import { useToast } from '../../hooks/useToast'
 import { crewApi } from '../../api/crew.api'
 import { VOIVODESHIP_LABELS, VOIVODESHIPS_ORDERED } from '../../utils/voivodeships'
 import type { ApiError } from '../../types/api.types'
-import type { CrewProfileResponse } from '../../types/crew.types'
+import type { CrewProfileResponse, Voivodeship } from '../../types/crew.types'
 
 const VOIVODESHIPS = Object.keys(VOIVODESHIP_LABELS) as [Voivodeship, ...Voivodeship[]]
 
@@ -49,7 +49,8 @@ function buildDefaultValues(p: CrewProfileResponse | null): FormData {
     phone: p?.phone ?? '',
     contactEmail: p?.contactEmail ?? '',
     city: p?.city ?? '',
-    voivodeship: p?.voivodeship ?? '',
+    // Pusty string = stan "nie wybrano"; z.enum odrzuci go przy submit ("Wybierz województwo").
+    voivodeship: (p?.voivodeship ?? '') as Voivodeship,
     serviceRadiusKm: p?.serviceRadiusKm?.toString() ?? '',
     nip: p?.nip ?? '',
     categoryIds: p?.serviceCategories?.map((c) => c.id) ?? [],
