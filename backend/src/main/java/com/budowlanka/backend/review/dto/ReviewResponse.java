@@ -4,4 +4,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ReviewResponse(
-    UUID id, int rating, String comment, String authorDisplayName, Instant createdAt) {}
+    UUID id,
+    int rating,
+    String comment,
+    String authorDisplayName,
+    UUID authorUserId,
+    Instant createdAt) {}

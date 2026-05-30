@@ -8,27 +8,29 @@ import { ReviewForm } from './ReviewForm'
 
 interface ReviewListProps {
   slug: string
-  currentUserEmail: string | null
+  currentUserId: string | null
   currentUserRole: User['role'] | null
 }
 
-export function ReviewList({ slug, currentUserEmail, currentUserRole }: ReviewListProps) {
+export function ReviewList({ slug, currentUserId, currentUserRole }: ReviewListProps) {
   const [page, setPage] = useState(0)
   const [editingReview, setEditingReview] = useState<ReviewResponse | null>(null)
 
   const { reviews, totalPages, isLoading, isFetching, error, refetch } = useCrewReviews(slug, page)
   const { deleteReview, isDeleting } = useDeleteReview(slug)
 
-  // authorDisplayName to email użytkownika (per API contract) — porównanie jest celowe.
-  // Przy dodaniu authorId do ReviewResponse zamienić na porównanie ID.
+  // Właściciel opinii rozpoznawany po authorUserId (porównanie ID, nie zamaskowanego authorDisplayName).
   const userOwnReview =
-    currentUserEmail !== null
-      ? (reviews.find((r) => r.authorDisplayName === currentUserEmail) ?? null)
-      : null
+    currentUserId !== null ? (reviews.find((r) => r.authorUserId === currentUserId) ?? null) : null
 
   // Sprawdzamy tylko aktualną stronę — edge case (opinia na innej stronie) obsługuje toast 409 w useAddReview.
   const canAddReview =
-    currentUserRole === 'CLIENT' && currentUserEmail !== null && userOwnReview === null
+    currentUserRole === 'CLIENT' && currentUserId !== null && userOwnReview === null
+
+  // Własna opinia zalogowanego klienta zawsze na górze (w obrębie bieżącej strony).
+  const displayedReviews = userOwnReview
+    ? [userOwnReview, ...reviews.filter((r) => r.id !== userOwnReview.id)]
+    : reviews
 
   function handlePageChange(nextPage: number) {
     setPage(nextPage)
@@ -69,8 +71,8 @@ export function ReviewList({ slug, currentUserEmail, currentUserRole }: ReviewLi
   return (
     <div className="flex flex-col gap-3">
       {canAddReview && !editingReview && <ReviewForm slug={slug} onSuccess={() => setPage(0)} />}
-      {reviews.map((review) => {
-        const isOwner = currentUserEmail !== null && review.authorDisplayName === currentUserEmail
+      {displayedReviews.map((review) => {
+        const isOwner = currentUserId !== null && review.authorUserId === currentUserId
 
         if (editingReview?.id === review.id) {
           return (

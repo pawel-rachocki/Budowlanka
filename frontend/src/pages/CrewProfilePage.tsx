@@ -93,7 +93,7 @@ export default function CrewProfilePage() {
       </header>
 
       {/* ── Main content ────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
+      <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {/* ── Left: content ─────────────────────────────────────────── */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -185,7 +185,7 @@ export default function CrewProfilePage() {
       {(photos.length > 0 || photosLoading) && (
         <section
           aria-label="Portfolio zdjęć"
-          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+          className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
         >
           <PhotoGallery photos={photos} isLoading={photosLoading} />
         </section>
@@ -194,7 +194,7 @@ export default function CrewProfilePage() {
       {/* ── Opinie klientów ─────────────────────────────────────────────── */}
       <section
         aria-labelledby="reviews-heading"
-        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+        className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
       >
         <h2
           id="reviews-heading"
@@ -204,7 +204,7 @@ export default function CrewProfilePage() {
         </h2>
         <ReviewList
           slug={slug!}
-          currentUserEmail={user?.email ?? null}
+          currentUserId={user?.id ?? null}
           currentUserRole={user?.role ?? null}
         />
       </section>
@@ -337,7 +337,7 @@ function SkeletonLayout() {
         </div>
       </div>
       {/* Main skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 animate-pulse">
           {/* Left */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -378,7 +378,7 @@ function SkeletonLayout() {
         </div>
       </div>
       {/* Gallery skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
         <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
           <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
@@ -389,7 +389,7 @@ function SkeletonLayout() {
         </div>
       </div>
       {/* Reviews skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
         <div className="h-3 w-24 rounded bg-navy-100 mb-4" />
         <div className="flex flex-col gap-3">
           {[0, 1, 2].map((i) => (

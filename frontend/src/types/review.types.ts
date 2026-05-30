@@ -5,6 +5,7 @@ export interface ReviewResponse {
   rating: number
   comment: string | null
   authorDisplayName: string
+  authorUserId: string
   createdAt: string
 }
 

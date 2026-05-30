@@ -11,10 +11,18 @@ const schema = z.object({
     .string()
     .trim()
     .transform((v) => (v === '' ? undefined : v))
-    .pipe(z.string().min(10, 'Komentarz musi mieć co najmniej 10 znaków').max(1000).optional()),
+    .pipe(
+      z
+        .string()
+        .min(10, 'Komentarz musi mieć co najmniej 10 znaków')
+        .max(1000, 'Komentarz może mieć maksymalnie 1000 znaków')
+        .optional()
+    ),
 })
 
-type FormValues = z.infer<typeof schema>
+// Schemat ma .transform() → typ wejściowy (formularz) i wyjściowy (po walidacji) różnią się.
+type FormInput = z.input<typeof schema>
+type FormOutput = z.output<typeof schema>
 
 interface ReviewFormProps {
   slug: string
@@ -35,7 +43,7 @@ export function ReviewForm({ slug, review, onSuccess, onCancel }: ReviewFormProp
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
     defaultValues: {
       rating: review?.rating ?? 0,
@@ -45,7 +53,7 @@ export function ReviewForm({ slug, review, onSuccess, onCancel }: ReviewFormProp
 
   const rating = useWatch({ control, name: 'rating' })
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormOutput) {
     try {
       if (isEdit) {
         await updateReview({ reviewId: review.id, data: values })

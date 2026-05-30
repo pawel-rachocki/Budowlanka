@@ -57,7 +57,12 @@ class ReviewServiceTest {
               String email = r.getAuthor().getEmail();
               String masked = email.substring(0, Math.min(3, email.indexOf('@'))) + "***";
               return new ReviewResponse(
-                  r.getId(), r.getRating(), r.getComment(), masked, r.getCreatedAt());
+                  r.getId(),
+                  r.getRating(),
+                  r.getComment(),
+                  masked,
+                  r.getAuthor().getId(),
+                  r.getCreatedAt());
             });
   }
 

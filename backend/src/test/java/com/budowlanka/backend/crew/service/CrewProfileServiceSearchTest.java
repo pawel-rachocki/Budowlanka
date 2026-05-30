@@ -64,7 +64,8 @@ class CrewProfileServiceSearchTest {
                   p.getVoivodeship().name(),
                   p.getAvgRating(),
                   p.getReviewCount(),
-                  cats);
+                  cats,
+                  p.isHasActiveBoost());
             });
   }
 

@@ -107,7 +107,8 @@ class CrewProfileServiceTest {
                   p.getVoivodeship().name(),
                   p.getAvgRating(),
                   p.getReviewCount(),
-                  List.of());
+                  List.of(),
+                  p.isHasActiveBoost());
             });
   }
 

@@ -12,6 +12,7 @@ public interface ReviewMapper {
   @Mapping(
       target = "authorDisplayName",
       expression = "java(maskEmail(review.getAuthor().getEmail()))")
+  @Mapping(target = "authorUserId", source = "author.id")
   ReviewResponse toResponse(Review review);
 
   @Named("maskEmail")

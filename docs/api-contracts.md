@@ -256,17 +256,20 @@ Response `404`: profil nie istnieje
   "id": "uuid",
   "rating": 4,
   "comment": "Świetna robota, polecam!",
-  "authorDisplayName": "jan@example.com",
+  "authorDisplayName": "jan***",
+  "authorUserId": "uuid",
   "createdAt": "2026-05-20T10:00:00Z"
 }
 ```
+- `authorDisplayName`: zamaskowany prefiks emaila autora (np. `jan***`) — pełny email nie jest ujawniany publicznie (RODO).
+- `authorUserId`: UUID autora — frontend porównuje z ID zalogowanego użytkownika, by pokazać przyciski Edytuj/Usuń.
 
 ### GET /api/crew/profiles/{slug}/reviews?page=0&size=20
 Auth: brak (publiczny)
 Response `200`: `PagedResponse<ReviewResponse>`
 ```json
 {
-  "content": [ { "id": "uuid", "rating": 4, "comment": "Świetna robota!", "authorDisplayName": "jan@example.com", "createdAt": "2026-05-20T10:00:00Z" } ],
+  "content": [ { "id": "uuid", "rating": 4, "comment": "Świetna robota!", "authorDisplayName": "jan***", "authorUserId": "uuid", "createdAt": "2026-05-20T10:00:00Z" } ],
   "totalElements": 5,
   "totalPages": 1,
   "number": 0,
