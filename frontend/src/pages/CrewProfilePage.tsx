@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import PhotoGallery from '../components/photo/PhotoGallery'
+import { ReviewList } from '../components/review/ReviewList'
 import { useAuth } from '../hooks/useAuth'
 import { useCrewProfile } from '../hooks/useCrewProfile'
 import { useCrewPhotos } from '../hooks/usePhotos'
@@ -92,7 +93,7 @@ export default function CrewProfilePage() {
       </header>
 
       {/* ── Main content ────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
+      <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {/* ── Left: content ─────────────────────────────────────────── */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -178,24 +179,35 @@ export default function CrewProfilePage() {
             </div>
           </div>
         </div>
-
-        {/* ── Portfolio gallery ─────────────────────────────────────────── */}
-        {(photos.length > 0 || photosLoading) && (
-          <div className="mt-6">
-            <PhotoGallery photos={photos} isLoading={photosLoading} />
-          </div>
-        )}
       </section>
 
       {/* ── Portfolio gallery ────────────────────────────────────────────── */}
       {(photos.length > 0 || photosLoading) && (
         <section
           aria-label="Portfolio zdjęć"
-          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+          className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
         >
           <PhotoGallery photos={photos} isLoading={photosLoading} />
         </section>
       )}
+
+      {/* ── Opinie klientów ─────────────────────────────────────────────── */}
+      <section
+        aria-labelledby="reviews-heading"
+        className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10"
+      >
+        <h2
+          id="reviews-heading"
+          className="text-xs font-semibold uppercase tracking-wider text-muted mb-4"
+        >
+          Opinie klientów
+        </h2>
+        <ReviewList
+          slug={slug!}
+          currentUserId={user?.id ?? null}
+          currentUserRole={user?.role ?? null}
+        />
+      </section>
     </>
   )
 }
@@ -325,7 +337,7 @@ function SkeletonLayout() {
         </div>
       </div>
       {/* Main skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 animate-pulse">
           {/* Left */}
           <div className="md:col-span-2 flex flex-col gap-5">
@@ -364,20 +376,9 @@ function SkeletonLayout() {
             <div className="rounded-xl border border-navy-100 bg-surface-card p-5 h-52" />
           </div>
         </div>
-        {/* Gallery skeleton */}
-        <div className="mt-6 animate-pulse">
-          <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
-            <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-square rounded-lg bg-navy-100" />
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
       {/* Gallery skeleton */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
         <div className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-5">
           <div className="h-3 w-16 rounded bg-navy-100 mb-4" />
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
@@ -385,6 +386,30 @@ function SkeletonLayout() {
               <div key={i} className="aspect-square rounded-lg bg-navy-100" />
             ))}
           </div>
+        </div>
+      </div>
+      {/* Reviews skeleton */}
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 animate-pulse">
+        <div className="h-3 w-24 rounded bg-navy-100 mb-4" />
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-navy-100 bg-surface-card shadow-sm p-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-navy-100" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="h-3.5 w-32 rounded bg-navy-100" />
+                  <div className="h-3 w-24 rounded bg-navy-100" />
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="h-3 w-full rounded bg-navy-100" />
+                <div className="h-3 w-4/5 rounded bg-navy-100" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </>

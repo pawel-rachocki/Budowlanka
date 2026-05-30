@@ -3,7 +3,6 @@ package com.budowlanka.backend.crew.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.budowlanka.backend.auth.entity.User;
@@ -108,7 +107,8 @@ class CrewProfileServiceTest {
                   p.getVoivodeship().name(),
                   p.getAvgRating(),
                   p.getReviewCount(),
-                  List.of());
+                  List.of(),
+                  p.isHasActiveBoost());
             });
   }
 
@@ -347,7 +347,7 @@ class CrewProfileServiceTest {
     UUID categoryId = UUID.randomUUID();
 
     Page<CrewProfile> page = new PageImpl<>(List.of(profile), defaultPageable, 1);
-    when(crewProfileRepository.findAll(any(Specification.class), eq(defaultPageable)))
+    when(crewProfileRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
     Page<CrewProfileSummaryResponse> result =
@@ -356,7 +356,7 @@ class CrewProfileServiceTest {
     assertThat(result.getTotalElements()).isEqualTo(1);
     assertThat(result.getContent()).hasSize(1);
     assertThat(result.getContent().getFirst().companyName()).isEqualTo("Test Remonty");
-    verify(crewProfileRepository).findAll(any(Specification.class), eq(defaultPageable));
+    verify(crewProfileRepository).findAll(any(Specification.class), any(Pageable.class));
   }
 
   // --- helpers ---

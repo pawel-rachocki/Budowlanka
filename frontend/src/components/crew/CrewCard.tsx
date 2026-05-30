@@ -29,10 +29,17 @@ export default function CrewCard({ crew }: CrewCardProps) {
       <div className="absolute inset-y-0 left-0 w-1 bg-brand-500" aria-hidden="true" />
 
       <div className="flex flex-col gap-3 py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7">
-        {/* Company name */}
-        <h3 className="line-clamp-2 text-base font-bold leading-tight text-navy-900 transition-colors group-hover:text-brand-600">
-          {crew.companyName}
-        </h3>
+        {/* Company name + boost badge */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="line-clamp-2 text-base font-bold leading-tight text-navy-900 transition-colors group-hover:text-brand-600">
+            {crew.companyName}
+          </h3>
+          {crew.boosted && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-500 px-2.5 py-0.5 text-xs font-semibold text-white">
+              <span aria-hidden="true">★</span> Promowane
+            </span>
+          )}
+        </div>
 
         {/* Location + Rating row */}
         <div className="flex flex-wrap gap-x-4 gap-y-1.5">

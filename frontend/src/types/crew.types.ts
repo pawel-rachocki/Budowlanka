@@ -1,4 +1,7 @@
 import type { ServiceCategoryResponse } from './category.types'
+import type { Page } from './api.types'
+
+export type { Page }
 
 export type Voivodeship =
   | 'DOLNOSLASKIE'
@@ -48,6 +51,7 @@ export interface CrewProfileSummaryResponse {
   avgRating: number
   reviewCount: number
   serviceCategories: ServiceCategoryResponse[]
+  boosted?: boolean
 }
 
 export interface CreateCrewProfileRequest {
@@ -80,12 +84,4 @@ export interface CrewSearchParams {
   categoryId?: string
   page?: number
   size?: number
-}
-
-export interface Page<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
 }

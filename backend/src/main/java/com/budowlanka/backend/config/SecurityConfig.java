@@ -72,6 +72,14 @@ public class SecurityConfig {
                     .hasRole("CREW")
                     .requestMatchers(HttpMethod.GET, "/api/crew/profiles/*/photos")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/crew/profiles/*/reviews")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/crew/profiles/*/reviews")
+                    .hasRole("CLIENT")
+                    .requestMatchers(HttpMethod.PUT, "/api/crew/profiles/*/reviews/*")
+                    .hasRole("CLIENT")
+                    .requestMatchers(HttpMethod.DELETE, "/api/crew/profiles/*/reviews/*")
+                    .hasRole("CLIENT")
                     .anyRequest()
                     .authenticated());
     return http.build();
