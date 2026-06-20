@@ -160,6 +160,10 @@ CREATE TABLE payments (
     completed_at     TIMESTAMPTZ
 );
 
+-- UNIQUE wymusza idempotentność webhooka P24 (wiele NULL dozwolone dla rekordów PENDING)
+CREATE UNIQUE INDEX idx_payments_provider_tx ON payments(provider_tx_id);
+CREATE INDEX idx_payments_crew ON payments(crew_profile_id);
+
 -- ============================================================
 -- PRZYSZŁY CZAT (Faza 2+) — tabele gotowe, API nie implementuj teraz
 
