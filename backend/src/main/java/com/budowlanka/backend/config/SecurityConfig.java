@@ -54,6 +54,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/categories")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/packages/**")
+                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crew/profiles")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crew/profiles/me")

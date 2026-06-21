@@ -174,6 +174,34 @@ Response `200`:
 
 ---
 
+## Packages — `/api/packages`
+
+Publiczny katalog (cennik) pakietów. Zwracane są tylko pakiety aktywne (`is_active=true`), posortowane rosnąco po cenie.
+
+### GET /api/packages/listing
+Auth: brak (publiczny)
+Response `200`: `List<ListingPackageResponse>`
+```json
+[
+  { "id": "uuid", "name": "7 dni", "durationDays": 7, "pricePln": 29.00 },
+  { "id": "uuid", "name": "14 dni", "durationDays": 14, "pricePln": 49.00 },
+  { "id": "uuid", "name": "30 dni", "durationDays": 30, "pricePln": 89.00 },
+  { "id": "uuid", "name": "365 dni", "durationDays": 365, "pricePln": 699.00 }
+]
+```
+
+### GET /api/packages/boost
+Auth: brak (publiczny)
+Response `200`: `List<BoostPackageResponse>`
+```json
+[
+  { "id": "uuid", "name": "Boost 7 dni", "durationDays": 7, "pricePln": 19.00 },
+  { "id": "uuid", "name": "Boost 30 dni", "durationDays": 30, "pricePln": 49.00 }
+]
+```
+
+---
+
 ## Admin — `/api/admin`
 
 Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy

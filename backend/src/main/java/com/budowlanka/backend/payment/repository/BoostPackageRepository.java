@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BoostPackageRepository extends JpaRepository<BoostPackage, UUID> {
 
-  List<BoostPackage> findByActiveTrue();
+  List<BoostPackage> findByActiveTrueOrderByPricePlnAsc();
 }
