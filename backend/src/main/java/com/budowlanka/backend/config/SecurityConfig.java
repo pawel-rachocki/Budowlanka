@@ -88,6 +88,8 @@ public class SecurityConfig {
                     .hasRole("CREW")
                     .requestMatchers(HttpMethod.GET, "/api/payments/my")
                     .hasRole("CREW")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/webhook/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated());
     return http.build();

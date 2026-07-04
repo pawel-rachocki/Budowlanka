@@ -267,6 +267,37 @@ Response `401`: brak lub nieprawidłowy token
 Response `403`: zalogowany użytkownik nie ma roli CREW
 Response `404`: profil ekipy nie istnieje
 
+### POST /api/payments/webhook/p24
+Auth: brak (publiczny — uwierzytelnienie przez podpis P24, nie JWT). Endpoint notyfikacji serwer-serwer wywoływany przez Przelewy24 (`urlStatus`).
+Content-Type: `application/json`
+Request (`P24WebhookNotification`):
+```json
+{
+  "merchantId": 12345,
+  "posId": 12345,
+  "sessionId": "3f1c...uuid płatności",
+  "amount": 8900,
+  "originAmount": 8900,
+  "currency": "PLN",
+  "orderId": 987654321,
+  "methodId": 25,
+  "statement": "platnosc",
+  "sign": "sha384hex..."
+}
+```
+- `sessionId`: nasze `payments.id` (UUID) nadane przy inicjacji płatności
+- `amount` / `originAmount`: kwota w groszach (int)
+- `orderId`: identyfikator transakcji nadany przez P24 → zapisywany jako `provider_tx_id`
+- `sign`: podpis SHA384 liczony z `{merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crc}`
+
+Przetwarzanie:
+- Weryfikacja podpisu (`P24SignatureUtil`). Niezgodny → `400`, brak akcji.
+- Idempotentność: płatność szukana po `sessionId`; gdy już `COMPLETED` → `200` bez ponownej akcji.
+- Potwierdzenie u P24 (`verifyTransaction`), następnie aktywacja pakietu (`SubscriptionActivationService`) i `status=COMPLETED`, `provider_tx_id=orderId`, `completed_at=now`.
+
+Response `400`: nieprawidłowy podpis (żądanie odrzucone)
+Response `200`: notyfikacja przyjęta — **zawsze** po pomyślnej weryfikacji podpisu (także przy błędach biznesowych: nieznany `sessionId`, niezgodna kwota, verify=fail, błąd bramki), by P24 nie ponawiał w nieskończoność. Szczegóły w logach.
+
 ---
 
 ## Admin — `/api/admin`
