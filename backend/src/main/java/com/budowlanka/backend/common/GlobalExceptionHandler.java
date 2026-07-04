@@ -9,6 +9,8 @@ import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.CrewProfileAlreadyExistsException;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import com.budowlanka.backend.payment.exception.P24ClientException;
+import com.budowlanka.backend.payment.exception.PackageNotFoundException;
 import com.budowlanka.backend.photo.exception.InvalidImageException;
 import com.budowlanka.backend.photo.exception.PhotoLimitExceededException;
 import com.budowlanka.backend.photo.exception.PhotoNotFoundException;
@@ -188,6 +190,19 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.FORBIDDEN)
   public ApiError handleReviewOwnership(ReviewOwnershipException ex) {
     return ApiError.of(403, ex.getMessage());
+  }
+
+  @ExceptionHandler(PackageNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handlePackageNotFound(PackageNotFoundException ex) {
+    return ApiError.of(404, ex.getMessage());
+  }
+
+  @ExceptionHandler(P24ClientException.class)
+  @ResponseStatus(HttpStatus.BAD_GATEWAY)
+  public ApiError handleP24Client(P24ClientException ex) {
+    log.error("Błąd komunikacji z Przelewy24: {}", ex.getMessage(), ex);
+    return ApiError.of(502, "Błąd komunikacji z operatorem płatności. Spróbuj ponownie później.");
   }
 
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
