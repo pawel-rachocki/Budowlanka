@@ -1,6 +1,7 @@
 package com.budowlanka.backend.crew.repository;
 
 import com.budowlanka.backend.crew.entity.CrewProfile;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,4 +40,25 @@ public interface CrewProfileRepository
   boolean existsBySlugAndIdNot(String slug, UUID id);
 
   boolean existsByUserId(UUID userId);
+
+  /**
+   * Ukrywa ({@code is_visible=false}) widoczne profile, które nie mają żadnej wciąż aktywnej
+   * subskrypcji (rozumianej jako {@code expires_at > now} — zgodnie z decyzją arch. „profil
+   * widoczny = aktywna subskrypcja z expires_at > NOW()"). Widoczność liczymy po {@code
+   * expires_at}, nie po fladze {@code is_active}, więc wynik jest niezależny od kolejności względem
+   * {@link com.budowlanka.backend.payment.repository.CrewSubscriptionRepository#deactivateExpired}.
+   *
+   * <p>Nigdy nie ustawia {@code visible=true}. Profile zablokowane mają już {@code
+   * is_visible=false}, więc predykat {@code visible=true} je pomija — nie zostaną przypadkiem
+   * odsłonięte. Idempotentne.
+   *
+   * @return liczba ukrytych profili
+   */
+  @Modifying(clearAutomatically = true)
+  @Query(
+      "UPDATE CrewProfile c SET c.visible = false "
+          + "WHERE c.visible = true AND NOT EXISTS ("
+          + "  SELECT 1 FROM CrewSubscription s "
+          + "  WHERE s.crewProfile = c AND s.expiresAt > :now)")
+  int hideProfilesWithoutActiveSubscription(@Param("now") Instant now);
 }
