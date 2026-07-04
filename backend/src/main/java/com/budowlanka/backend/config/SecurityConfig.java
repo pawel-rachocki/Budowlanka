@@ -82,6 +82,12 @@ public class SecurityConfig {
                     .hasRole("CLIENT")
                     .requestMatchers(HttpMethod.DELETE, "/api/crew/profiles/*/reviews/*")
                     .hasRole("CLIENT")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/listing")
+                    .hasRole("CREW")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/boost")
+                    .hasRole("CREW")
+                    .requestMatchers(HttpMethod.GET, "/api/payments/my")
+                    .hasRole("CREW")
                     .anyRequest()
                     .authenticated());
     return http.build();

@@ -202,6 +202,73 @@ Response `200`: `List<BoostPackageResponse>`
 
 ---
 
+## Payments — `/api/payments`
+
+Auth: `Bearer {accessToken}` (rola CREW) — wszystkie endpointy. Inicjacja tworzy rekord `payments` w stanie `PENDING` i rejestruje transakcję w Przelewy24. Aktywacja pakietu/boosta następuje dopiero po zaksięgowaniu płatności (webhook), nie w tych endpointach.
+
+`PaymentResponse`:
+```json
+{
+  "id": "uuid",
+  "amountPln": 89.00,
+  "currency": "PLN",
+  "paymentType": "LISTING",
+  "status": "PENDING",
+  "providerTxId": null,
+  "createdAt": "2026-07-04T12:00:00Z",
+  "completedAt": null
+}
+```
+- `paymentType`: `LISTING` lub `BOOST`
+- `status`: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED`
+- `providerTxId`: identyfikator transakcji u operatora — `null` dopóki płatność nie zaksięgowana
+- `completedAt`: `null` dopóki status nie `COMPLETED`
+
+### POST /api/payments/listing
+Auth: `Bearer {accessToken}` (rola CREW)
+Request:
+```json
+{ "packageId": "uuid" }
+```
+- `packageId`: wymagany, UUID pakietu z katalogu `listing_packages` (aktywnego)
+
+Response `200`:
+```json
+{ "redirectUrl": "https://sandbox.przelewy24.pl/trnRequest/{token}" }
+```
+Response `400`: błąd walidacji (brak `packageId`)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: pakiet nie istnieje lub jest nieaktywny; profil ekipy nie istnieje
+Response `502`: błąd komunikacji z bramką Przelewy24
+
+### POST /api/payments/boost
+Auth: `Bearer {accessToken}` (rola CREW)
+Request:
+```json
+{ "boostPackageId": "uuid" }
+```
+- `boostPackageId`: wymagany, UUID pakietu z katalogu `boost_packages` (aktywnego)
+
+Response `200`:
+```json
+{ "redirectUrl": "https://sandbox.przelewy24.pl/trnRequest/{token}" }
+```
+Response `400`: błąd walidacji (brak `boostPackageId`)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: pakiet nie istnieje lub jest nieaktywny; profil ekipy nie istnieje
+Response `502`: błąd komunikacji z bramką Przelewy24
+
+### GET /api/payments/my
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `List<PaymentResponse>` — wszystkie płatności ekipy, posortowane od najnowszych
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+---
+
 ## Admin — `/api/admin`
 
 Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy
