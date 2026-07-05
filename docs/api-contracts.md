@@ -402,6 +402,34 @@ Response `400`: błąd walidacji (brak reason przy blokowaniu)
 Response `403`: brak roli ADMIN
 Response `404`: profil nie istnieje
 
+### GET /api/admin/payments?status=&page=0&size=20
+Lista wszystkich płatności w systemie (dla wsparcia i rozliczeń). Parametr `status` opcjonalny: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED` — brak zwraca wszystkie. Max `size=100`, sortowanie malejąco po `createdAt`.
+Response `200`: `PagedResponse<AdminPaymentResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "crewCompanyName": "Kowalski Remonty",
+      "amountPln": 89.00,
+      "paymentType": "LISTING",
+      "status": "COMPLETED",
+      "providerTxId": "987654321",
+      "createdAt": "2026-07-04T12:00:00Z",
+      "completedAt": "2026-07-04T12:05:00Z"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+- `paymentType`: `LISTING` lub `BOOST`
+- `status`: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED`
+- `providerTxId` / `completedAt`: `null` dopóki płatność nie zaksięgowana
+Response `403`: brak roli ADMIN
+
 ---
 
 ## Reviews — `/api/crew/profiles/{slug}/reviews`

@@ -13,9 +13,14 @@ import com.budowlanka.backend.auth.service.JwtService;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.enums.Voivodeship;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
+import com.budowlanka.backend.payment.entity.Payment;
+import com.budowlanka.backend.payment.enums.PaymentStatus;
+import com.budowlanka.backend.payment.enums.PaymentType;
+import com.budowlanka.backend.payment.repository.PaymentRepository;
 import com.budowlanka.backend.photo.entity.PortfolioPhoto;
 import com.budowlanka.backend.photo.enums.ModerationStatus;
 import com.budowlanka.backend.photo.repository.PortfolioPhotoRepository;
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +39,7 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
   @Autowired private UserRepository userRepository;
   @Autowired private CrewProfileRepository crewProfileRepository;
   @Autowired private PortfolioPhotoRepository photoRepository;
+  @Autowired private PaymentRepository paymentRepository;
   @Autowired private JwtService jwtService;
 
   private User adminUser;
@@ -57,6 +63,8 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
 
   @AfterEach
   void tearDown() {
+    paymentRepository.deleteAll(
+        paymentRepository.findByCrewProfileIdOrderByCreatedAtDesc(crewProfile.getId()));
     photoRepository.deleteAll(
         photoRepository.findByCrewProfileIdOrderByUploadedAtDesc(crewProfile.getId()));
     crewProfileRepository.delete(crewProfile);
@@ -276,7 +284,65 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(jsonPath("$.content[?(@.id == '" + crewProfile.getId() + "')]").doesNotExist());
   }
 
+  // ---- GET /api/admin/payments ----
+
+  @Test
+  void should_return401_when_paymentsListAccessedByAnonymous() throws Exception {
+    mockMvc.perform(get("/api/admin/payments")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void should_return403_when_paymentsListAccessedByClient() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/payments").header("Authorization", "Bearer " + clientToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_return403_when_paymentsListAccessedByCrew() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/payments").header("Authorization", "Bearer " + crewToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_return200_when_adminListsPayments() throws Exception {
+    savePayment(PaymentStatus.COMPLETED);
+
+    mockMvc
+        .perform(get("/api/admin/payments").header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[0].crewCompanyName").isNotEmpty());
+  }
+
+  @Test
+  void should_filterByStatus_when_queryParamProvided() throws Exception {
+    savePayment(PaymentStatus.COMPLETED);
+    savePayment(PaymentStatus.PENDING);
+
+    mockMvc
+        .perform(
+            get("/api/admin/payments")
+                .param("status", "COMPLETED")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.content[?(@.status != 'COMPLETED')]").doesNotExist());
+  }
+
   // ---- helpers ----
+
+  private Payment savePayment(PaymentStatus status) {
+    return paymentRepository.save(
+        Payment.builder()
+            .crewProfile(crewProfile)
+            .amountPln(new BigDecimal("89.00"))
+            .paymentProvider("P24")
+            .status(status)
+            .paymentType(PaymentType.LISTING)
+            .build());
+  }
 
   private User saveVerifiedUser(String email, UserRole role) {
     return userRepository.save(
