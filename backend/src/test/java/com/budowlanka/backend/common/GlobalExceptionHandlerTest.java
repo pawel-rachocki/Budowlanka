@@ -10,6 +10,8 @@ import com.budowlanka.backend.auth.exception.InvalidTokenException;
 import com.budowlanka.backend.auth.exception.VerificationTokenException;
 import com.budowlanka.backend.crew.exception.BlankFieldException;
 import com.budowlanka.backend.crew.exception.ServiceCategoryNotFoundException;
+import com.budowlanka.backend.payment.exception.P24ClientException;
+import com.budowlanka.backend.payment.exception.PackageNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -157,6 +159,26 @@ class GlobalExceptionHandlerTest {
 
     assertThat(result.status()).isEqualTo(400);
     assertThat(result.message()).isEqualTo("Pole companyName nie może być puste.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return404_when_packageNotFoundException() {
+    ApiError result = handler.handlePackageNotFound(new PackageNotFoundException());
+
+    assertThat(result.status()).isEqualTo(404);
+    assertThat(result.message()).isEqualTo("Pakiet nie istnieje lub jest nieaktywny.");
+    assertThat(result.timestamp()).isNotNull();
+  }
+
+  @Test
+  void should_return502WithGatewayMessage_when_p24ClientException() {
+    ApiError result =
+        handler.handleP24Client(new P24ClientException("Błąd komunikacji z Przelewy24 (register)"));
+
+    assertThat(result.status()).isEqualTo(502);
+    assertThat(result.message())
+        .isEqualTo("Błąd komunikacji z operatorem płatności. Spróbuj ponownie później.");
     assertThat(result.timestamp()).isNotNull();
   }
 

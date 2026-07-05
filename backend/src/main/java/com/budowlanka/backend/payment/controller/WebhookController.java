@@ -2,6 +2,7 @@ package com.budowlanka.backend.payment.controller;
 
 import com.budowlanka.backend.payment.client.P24SignatureUtil;
 import com.budowlanka.backend.payment.dto.P24WebhookNotification;
+import com.budowlanka.backend.payment.exception.InvalidWebhookSignatureException;
 import com.budowlanka.backend.payment.service.PaymentWebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,15 +36,15 @@ public class WebhookController {
 
   @PostMapping("/p24")
   public ResponseEntity<Void> handleP24(@RequestBody P24WebhookNotification notification) {
-    if (!signatureUtil.verifyWebhookSignature(notification)) {
-      log.warn(
-          "Webhook P24: nieprawidłowy podpis dla sessionId={} — odrzucam",
-          notification.sessionId());
-      return ResponseEntity.badRequest().build();
-    }
-
     try {
+      if (!signatureUtil.verifyWebhookSignature(notification)) {
+        throw new InvalidWebhookSignatureException(notification.sessionId());
+      }
       webhookService.process(notification);
+    } catch (InvalidWebhookSignatureException e) {
+      // Niezgodny podpis (potencjalnie sfałszowane żądanie) — odrzucamy przez 400, bez akcji.
+      log.warn("Webhook P24: {} — odrzucam", e.getMessage());
+      return ResponseEntity.badRequest().build();
     } catch (Exception e) {
       // Zawsze 200 po przejściu podpisu — inaczej P24 ponawia notyfikację w nieskończoność.
       log.error(
