@@ -6,6 +6,8 @@ import com.budowlanka.backend.admin.mapper.AdminCrewMapper;
 import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
+import com.budowlanka.backend.payment.repository.CrewSubscriptionRepository;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminCrewService {
 
   private final CrewProfileRepository crewProfileRepository;
+  private final CrewSubscriptionRepository crewSubscriptionRepository;
   private final AdminCrewMapper adminCrewMapper;
 
   @Transactional(readOnly = true)
@@ -46,7 +49,13 @@ public class AdminCrewService {
       log.info("Admin blocked crew id={}", id);
     } else {
       profile.unblock();
-      log.info("Admin unblocked crew id={}", id);
+      // Widoczność wynika z aktywnej subskrypcji — po odblokowaniu odsłaniamy profil tylko, gdy
+      // jego opłacona subskrypcja nadal obowiązuje. W przeciwnym razie pozostaje niewidoczny.
+      boolean hasActiveSubscription =
+          crewSubscriptionRepository.existsByCrewProfileIdAndActiveTrueAndExpiresAtAfter(
+              profile.getId(), Instant.now());
+      profile.setVisible(hasActiveSubscription);
+      log.info("Admin unblocked crew id={} (visible={})", id, hasActiveSubscription);
     }
 
     crewProfileRepository.save(profile);

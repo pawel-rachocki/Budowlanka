@@ -198,7 +198,10 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
   }
 
   @Test
-  void should_return200_when_adminUnblocksCrew() throws Exception {
+  void should_return200_and_stayHidden_when_adminUnblocksCrewWithoutSubscription()
+      throws Exception {
+    // Ekipa nie ma aktywnej subskrypcji — po odblokowaniu widoczność wynika z subskrypcji, więc
+    // profil pozostaje ukryty (REM-149).
     crewProfile.block("Stary powód");
     crewProfileRepository.save(crewProfile);
 
@@ -210,7 +213,7 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
                 .content("{\"blocked\":false}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.blocked").value(false))
-        .andExpect(jsonPath("$.visible").value(true))
+        .andExpect(jsonPath("$.visible").value(false))
         .andExpect(jsonPath("$.blockReason").isEmpty());
   }
 
