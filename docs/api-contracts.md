@@ -300,6 +300,36 @@ Response `200`: notyfikacja przyjęta — **zawsze** po pomyślnej weryfikacji p
 
 ---
 
+## Subscription — `/api/crew/subscription`
+
+Status subskrypcji i boosta zalogowanej ekipy — dane dla dashboardu ekipy (E-06).
+
+### GET /api/crew/subscription/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `SubscriptionStatusResponse`
+```json
+{
+  "hasActiveSubscription": true,
+  "isVisible": true,
+  "subscription": { "packageName": "30 dni", "expiresAt": "2026-08-04T12:00:00Z", "active": true },
+  "boost": { "boostName": "Boost 7 dni", "expiresAt": "2026-07-12T12:00:00Z" }
+}
+```
+- `hasActiveSubscription`: `true` gdy istnieje aktywna subskrypcja (`is_active=true` i `expires_at > NOW()`)
+- `isVisible`: aktualna flaga `is_visible` profilu ekipy
+- `subscription`: aktywna subskrypcja (`packageName`, `expiresAt`, `active`) lub `null` gdy brak
+- `boost`: aktywny boost (`boostName`, `expiresAt`) lub `null` gdy brak
+
+Brak aktywnej subskrypcji zwraca `200` z obiektem „pustym" (front pokazuje CTA „Wykup pakiet"), **nie** `404`:
+```json
+{ "hasActiveSubscription": false, "isVisible": false, "subscription": null, "boost": null }
+```
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+---
+
 ## Admin — `/api/admin`
 
 Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy
