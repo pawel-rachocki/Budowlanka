@@ -8,6 +8,8 @@ import CrewProfilePage from './pages/CrewProfilePage'
 import CrewDashboardPage from './pages/CrewDashboardPage'
 import PackageSelectionPage from './pages/PackageSelectionPage'
 import BoostSelectionPage from './pages/BoostSelectionPage'
+import PaymentSuccessPage from './pages/PaymentSuccessPage'
+import PaymentErrorPage from './pages/PaymentErrorPage'
 import AdminModerationPage from './pages/admin/AdminModerationPage'
 import AdminCrewListPage from './pages/admin/AdminCrewListPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -44,6 +46,8 @@ function App() {
           <Route path="/dashboard" element={<CrewDashboardPage />} />
           <Route path="/ekipa/pakiety" element={<PackageSelectionPage />} />
           <Route path="/ekipa/boost" element={<BoostSelectionPage />} />
+          <Route path="/platnosc/sukces" element={<PaymentSuccessPage />} />
+          <Route path="/platnosc/blad" element={<PaymentErrorPage />} />
         </Route>
         {/* Strony informacyjne — Sprint 6 */}
         <Route path="/o-nas" element={<div>O nas (Sprint 6)</div>} />
