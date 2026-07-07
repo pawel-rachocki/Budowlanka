@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useMyCrewProfile } from '../hooks/useMyCrewProfile'
 import CrewProfileForm from '../components/crew/CrewProfileForm'
 import PortfolioManager from '../components/photo/PortfolioManager'
+import SubscriptionWidget from '../components/crew/SubscriptionWidget'
+import PaymentHistory from '../components/crew/PaymentHistory'
 
 export default function CrewDashboardPage() {
   const { user } = useAuth()
@@ -44,47 +45,8 @@ export default function CrewDashboardPage() {
           </div>
         </div>
 
-        {/* Baner statusu widoczności profilu */}
-        {profile && (
-          <div
-            className={[
-              'mb-6 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm',
-              profile.visible
-                ? 'border-green-200 bg-green-50 text-green-800'
-                : 'border-amber-200 bg-amber-50 text-amber-800',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-                profile.visible ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600',
-              ].join(' ')}
-              aria-hidden
-            >
-              {profile.visible ? <CheckCircleIcon /> : <AlertCircleIcon />}
-            </span>
-            <div className="flex-1">
-              {profile.visible ? (
-                <>
-                  <span className="font-semibold">Profil jest widoczny</span>
-                  {' — '}
-                  <Link
-                    to={`/ekipy/${profile.slug}`}
-                    className="underline underline-offset-2 hover:text-green-900"
-                  >
-                    Zobacz profil publiczny
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <span className="font-semibold">Profil jest niewidoczny</span>
-                  {' — '}
-                  aktywuj pakiet, aby pojawić się na liście ekip
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Widget subskrypcji: status widoczności, pakiet, boost, CTA (F7) */}
+        {profile && <SubscriptionWidget slug={profile.slug} />}
 
         {/* Karta z formularzem */}
         <div className="rounded-xl border border-navy-100 bg-surface-card p-6 shadow-sm sm:p-8">
@@ -108,46 +70,14 @@ export default function CrewDashboardPage() {
             <PortfolioManager />
           </div>
         )}
+
+        {/* Historia płatności (F8) */}
+        {hasProfile && (
+          <div className="mt-6">
+            <PaymentHistory />
+          </div>
+        )}
       </div>
     </div>
-  )
-}
-
-function CheckCircleIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="9 12 11 14 15 10" />
-    </svg>
-  )
-}
-
-function AlertCircleIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
   )
 }
