@@ -3,6 +3,7 @@ import { useMyCrewProfile } from '../hooks/useMyCrewProfile'
 import CrewProfileForm from '../components/crew/CrewProfileForm'
 import PortfolioManager from '../components/photo/PortfolioManager'
 import SubscriptionWidget from '../components/crew/SubscriptionWidget'
+import PaymentHistory from '../components/crew/PaymentHistory'
 
 export default function CrewDashboardPage() {
   const { user } = useAuth()
@@ -67,6 +68,13 @@ export default function CrewDashboardPage() {
         {hasProfile && (
           <div className="mt-6">
             <PortfolioManager />
+          </div>
+        )}
+
+        {/* Historia płatności (F8) */}
+        {hasProfile && (
+          <div className="mt-6">
+            <PaymentHistory />
           </div>
         )}
       </div>
