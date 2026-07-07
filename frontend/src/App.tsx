@@ -46,9 +46,11 @@ function App() {
           <Route path="/dashboard" element={<CrewDashboardPage />} />
           <Route path="/ekipa/pakiety" element={<PackageSelectionPage />} />
           <Route path="/ekipa/boost" element={<BoostSelectionPage />} />
-          <Route path="/platnosc/sukces" element={<PaymentSuccessPage />} />
-          <Route path="/platnosc/blad" element={<PaymentErrorPage />} />
         </Route>
+        {/* Strony powrotu z P24 — publiczne: powrót z bramki (cross-site nav + reload SPA)
+            nie może odbijać usera na /login. Realny status pochodzi z webhooka. */}
+        <Route path="/platnosc/sukces" element={<PaymentSuccessPage />} />
+        <Route path="/platnosc/blad" element={<PaymentErrorPage />} />
         {/* Strony informacyjne — Sprint 6 */}
         <Route path="/o-nas" element={<div>O nas (Sprint 6)</div>} />
         <Route path="/kontakt" element={<div>Kontakt (Sprint 6)</div>} />
