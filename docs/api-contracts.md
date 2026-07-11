@@ -174,6 +174,162 @@ Response `200`:
 
 ---
 
+## Packages — `/api/packages`
+
+Publiczny katalog (cennik) pakietów. Zwracane są tylko pakiety aktywne (`is_active=true`), posortowane rosnąco po cenie.
+
+### GET /api/packages/listing
+Auth: brak (publiczny)
+Response `200`: `List<ListingPackageResponse>`
+```json
+[
+  { "id": "uuid", "name": "7 dni", "durationDays": 7, "pricePln": 29.00 },
+  { "id": "uuid", "name": "14 dni", "durationDays": 14, "pricePln": 49.00 },
+  { "id": "uuid", "name": "30 dni", "durationDays": 30, "pricePln": 89.00 },
+  { "id": "uuid", "name": "365 dni", "durationDays": 365, "pricePln": 699.00 }
+]
+```
+
+### GET /api/packages/boost
+Auth: brak (publiczny)
+Response `200`: `List<BoostPackageResponse>`
+```json
+[
+  { "id": "uuid", "name": "Boost 7 dni", "durationDays": 7, "pricePln": 19.00 },
+  { "id": "uuid", "name": "Boost 30 dni", "durationDays": 30, "pricePln": 49.00 }
+]
+```
+
+---
+
+## Payments — `/api/payments`
+
+Auth: `Bearer {accessToken}` (rola CREW) — wszystkie endpointy. Inicjacja tworzy rekord `payments` w stanie `PENDING` i rejestruje transakcję w Przelewy24. Aktywacja pakietu/boosta następuje dopiero po zaksięgowaniu płatności (webhook), nie w tych endpointach.
+
+`PaymentResponse`:
+```json
+{
+  "id": "uuid",
+  "amountPln": 89.00,
+  "currency": "PLN",
+  "paymentType": "LISTING",
+  "status": "PENDING",
+  "providerTxId": null,
+  "createdAt": "2026-07-04T12:00:00Z",
+  "completedAt": null
+}
+```
+- `paymentType`: `LISTING` lub `BOOST`
+- `status`: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED`
+- `providerTxId`: identyfikator transakcji u operatora — `null` dopóki płatność nie zaksięgowana
+- `completedAt`: `null` dopóki status nie `COMPLETED`
+
+### POST /api/payments/listing
+Auth: `Bearer {accessToken}` (rola CREW)
+Request:
+```json
+{ "packageId": "uuid" }
+```
+- `packageId`: wymagany, UUID pakietu z katalogu `listing_packages` (aktywnego)
+
+Response `200`:
+```json
+{ "redirectUrl": "https://sandbox.przelewy24.pl/trnRequest/{token}" }
+```
+Response `400`: błąd walidacji (brak `packageId`)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: pakiet nie istnieje lub jest nieaktywny; profil ekipy nie istnieje
+Response `502`: błąd komunikacji z bramką Przelewy24
+
+### POST /api/payments/boost
+Auth: `Bearer {accessToken}` (rola CREW)
+Request:
+```json
+{ "boostPackageId": "uuid" }
+```
+- `boostPackageId`: wymagany, UUID pakietu z katalogu `boost_packages` (aktywnego)
+
+Response `200`:
+```json
+{ "redirectUrl": "https://sandbox.przelewy24.pl/trnRequest/{token}" }
+```
+Response `400`: błąd walidacji (brak `boostPackageId`)
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: pakiet nie istnieje lub jest nieaktywny; profil ekipy nie istnieje
+Response `502`: błąd komunikacji z bramką Przelewy24
+
+### GET /api/payments/my
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `List<PaymentResponse>` — wszystkie płatności ekipy, posortowane od najnowszych
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+### POST /api/payments/webhook/p24
+Auth: brak (publiczny — uwierzytelnienie przez podpis P24, nie JWT). Endpoint notyfikacji serwer-serwer wywoływany przez Przelewy24 (`urlStatus`).
+Content-Type: `application/json`
+Request (`P24WebhookNotification`):
+```json
+{
+  "merchantId": 12345,
+  "posId": 12345,
+  "sessionId": "3f1c...uuid płatności",
+  "amount": 8900,
+  "originAmount": 8900,
+  "currency": "PLN",
+  "orderId": 987654321,
+  "methodId": 25,
+  "statement": "platnosc",
+  "sign": "sha384hex..."
+}
+```
+- `sessionId`: nasze `payments.id` (UUID) nadane przy inicjacji płatności
+- `amount` / `originAmount`: kwota w groszach (int)
+- `orderId`: identyfikator transakcji nadany przez P24 → zapisywany jako `provider_tx_id`
+- `sign`: podpis SHA384 liczony z `{merchantId, posId, sessionId, amount, originAmount, currency, orderId, methodId, statement, crc}`
+
+Przetwarzanie:
+- Weryfikacja podpisu (`P24SignatureUtil`). Niezgodny → `400`, brak akcji.
+- Idempotentność: płatność szukana po `sessionId`; gdy już `COMPLETED` → `200` bez ponownej akcji.
+- Potwierdzenie u P24 (`verifyTransaction`), następnie aktywacja pakietu (`SubscriptionActivationService`) i `status=COMPLETED`, `provider_tx_id=orderId`, `completed_at=now`.
+
+Response `400`: nieprawidłowy podpis (żądanie odrzucone)
+Response `200`: notyfikacja przyjęta — **zawsze** po pomyślnej weryfikacji podpisu (także przy błędach biznesowych: nieznany `sessionId`, niezgodna kwota, verify=fail, błąd bramki), by P24 nie ponawiał w nieskończoność. Szczegóły w logach.
+
+---
+
+## Subscription — `/api/crew/subscription`
+
+Status subskrypcji i boosta zalogowanej ekipy — dane dla dashboardu ekipy (E-06).
+
+### GET /api/crew/subscription/me
+Auth: `Bearer {accessToken}` (rola CREW)
+Response `200`: `SubscriptionStatusResponse`
+```json
+{
+  "hasActiveSubscription": true,
+  "isVisible": true,
+  "subscription": { "packageName": "30 dni", "expiresAt": "2026-08-04T12:00:00Z", "active": true },
+  "boost": { "boostName": "Boost 7 dni", "expiresAt": "2026-07-12T12:00:00Z" }
+}
+```
+- `hasActiveSubscription`: `true` gdy istnieje aktywna subskrypcja (`is_active=true` i `expires_at > NOW()`)
+- `isVisible`: aktualna flaga `is_visible` profilu ekipy
+- `subscription`: aktywna subskrypcja (`packageName`, `expiresAt`, `active`) lub `null` gdy brak
+- `boost`: aktywny boost (`boostName`, `expiresAt`) lub `null` gdy brak
+
+Brak aktywnej subskrypcji zwraca `200` z obiektem „pustym" (front pokazuje CTA „Wykup pakiet"), **nie** `404`:
+```json
+{ "hasActiveSubscription": false, "isVisible": false, "subscription": null, "boost": null }
+```
+Response `401`: brak lub nieprawidłowy token
+Response `403`: zalogowany użytkownik nie ma roli CREW
+Response `404`: profil ekipy nie istnieje
+
+---
+
 ## Admin — `/api/admin`
 
 Auth: `Bearer {accessToken}` (rola ADMIN) — wszystkie endpointy
@@ -245,6 +401,34 @@ Response `200`: `AdminCrewResponse`
 Response `400`: błąd walidacji (brak reason przy blokowaniu)
 Response `403`: brak roli ADMIN
 Response `404`: profil nie istnieje
+
+### GET /api/admin/payments?status=&page=0&size=20
+Lista wszystkich płatności w systemie (dla wsparcia i rozliczeń). Parametr `status` opcjonalny: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED` — brak zwraca wszystkie. Max `size=100`, sortowanie malejąco po `createdAt`.
+Response `200`: `PagedResponse<AdminPaymentResponse>`
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "crewCompanyName": "Kowalski Remonty",
+      "amountPln": 89.00,
+      "paymentType": "LISTING",
+      "status": "COMPLETED",
+      "providerTxId": "987654321",
+      "createdAt": "2026-07-04T12:00:00Z",
+      "completedAt": "2026-07-04T12:05:00Z"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 20
+}
+```
+- `paymentType`: `LISTING` lub `BOOST`
+- `status`: `PENDING` | `COMPLETED` | `FAILED` | `REFUNDED`
+- `providerTxId` / `completedAt`: `null` dopóki płatność nie zaksięgowana
+Response `403`: brak roli ADMIN
 
 ---
 

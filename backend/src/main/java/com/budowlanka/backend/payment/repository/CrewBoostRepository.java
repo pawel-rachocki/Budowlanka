@@ -10,4 +10,11 @@ public interface CrewBoostRepository extends JpaRepository<CrewBoost, UUID> {
 
   Optional<CrewBoost> findFirstByCrewProfileIdAndExpiresAtAfterOrderByExpiresAtDesc(
       UUID crewProfileId, Instant now);
+
+  /**
+   * Liczba wygasłych boostów ({@code expires_at < now}). Boosty wygasają „same" przez
+   * {@code @Formula hasActiveBoost} na profilu — ta metoda służy wyłącznie do logowania w
+   * schedulerze, nie zmienia stanu.
+   */
+  long countByExpiresAtBefore(Instant now);
 }

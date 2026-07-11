@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ListingPackageRepository extends JpaRepository<ListingPackage, UUID> {
 
-  List<ListingPackage> findByActiveTrue();
+  List<ListingPackage> findByActiveTrueOrderByPricePlnAsc();
 }

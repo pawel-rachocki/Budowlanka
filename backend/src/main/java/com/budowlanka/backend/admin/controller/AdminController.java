@@ -1,12 +1,15 @@
 package com.budowlanka.backend.admin.controller;
 
 import com.budowlanka.backend.admin.dto.AdminCrewResponse;
+import com.budowlanka.backend.admin.dto.AdminPaymentResponse;
 import com.budowlanka.backend.admin.dto.BlockCrewRequest;
 import com.budowlanka.backend.admin.dto.ModerationDecisionRequest;
 import com.budowlanka.backend.admin.dto.PhotoModerationItemResponse;
 import com.budowlanka.backend.admin.service.AdminCrewService;
 import com.budowlanka.backend.admin.service.AdminModerationService;
+import com.budowlanka.backend.admin.service.AdminPaymentService;
 import com.budowlanka.backend.common.PagedResponse;
+import com.budowlanka.backend.payment.enums.PaymentStatus;
 import com.budowlanka.backend.photo.dto.PhotoResponse;
 import com.budowlanka.backend.photo.enums.ModerationStatus;
 import jakarta.validation.Valid;
@@ -31,6 +34,7 @@ public class AdminController {
 
   private final AdminModerationService adminModerationService;
   private final AdminCrewService adminCrewService;
+  private final AdminPaymentService adminPaymentService;
 
   @GetMapping("/moderation/photos")
   public PagedResponse<PhotoModerationItemResponse> moderationQueue(
@@ -60,5 +64,14 @@ public class AdminController {
   public AdminCrewResponse blockCrew(
       @PathVariable UUID id, @Valid @RequestBody BlockCrewRequest request) {
     return adminCrewService.blockCrew(id, request);
+  }
+
+  @GetMapping("/payments")
+  public PagedResponse<AdminPaymentResponse> listPayments(
+      @RequestParam(required = false) PaymentStatus status,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    var pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("createdAt").descending());
+    return PagedResponse.from(adminPaymentService.listPayments(status, pageable));
   }
 }

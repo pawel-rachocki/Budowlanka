@@ -147,7 +147,8 @@ class CrewProfileServiceTest {
     assertThat(saved.getCompanyName()).isEqualTo("Test Remonty");
     assertThat(saved.getSlug()).isEqualTo("test-remonty-warszawa");
     assertThat(saved.getServiceRadiusKm()).isEqualTo(50);
-    assertThat(saved.isVisible()).isTrue();
+    // Nowy profil jest niewidoczny do czasu opłacenia pakietu (REM-149).
+    assertThat(saved.isVisible()).isFalse();
     assertThat(saved.getServiceCategories()).hasSize(1);
     assertThat(saved.getUser()).isEqualTo(user);
 

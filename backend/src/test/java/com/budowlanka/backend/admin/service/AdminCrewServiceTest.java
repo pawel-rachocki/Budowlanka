@@ -3,6 +3,7 @@ package com.budowlanka.backend.admin.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,8 @@ import com.budowlanka.backend.crew.entity.CrewProfile;
 import com.budowlanka.backend.crew.enums.Voivodeship;
 import com.budowlanka.backend.crew.exception.CrewProfileNotFoundException;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
+import com.budowlanka.backend.payment.repository.CrewSubscriptionRepository;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,13 +31,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class AdminCrewServiceTest {
 
   @Mock private CrewProfileRepository crewProfileRepository;
+  @Mock private CrewSubscriptionRepository crewSubscriptionRepository;
   @Mock private AdminCrewMapper adminCrewMapper;
 
   private AdminCrewService service;
 
   @BeforeEach
   void setUp() {
-    service = new AdminCrewService(crewProfileRepository, adminCrewMapper);
+    service =
+        new AdminCrewService(crewProfileRepository, crewSubscriptionRepository, adminCrewMapper);
     lenient()
         .when(adminCrewMapper.toResponse(any(CrewProfile.class)))
         .thenAnswer(
@@ -73,11 +78,14 @@ class AdminCrewServiceTest {
   }
 
   @Test
-  void should_unblockCrew_and_clearReason() {
+  void should_unblockCrew_and_makeVisible_when_activeSubscriptionExists() {
     CrewProfile profile = crewProfile();
     profile.block("Stary powód");
     when(crewProfileRepository.findById(profile.getId())).thenReturn(Optional.of(profile));
     when(crewProfileRepository.save(any())).thenReturn(profile);
+    when(crewSubscriptionRepository.existsByCrewProfileIdAndActiveTrueAndExpiresAtAfter(
+            eq(profile.getId()), any(Instant.class)))
+        .thenReturn(true);
 
     AdminCrewResponse response =
         service.blockCrew(profile.getId(), new BlockCrewRequest(false, null));
@@ -87,6 +95,27 @@ class AdminCrewServiceTest {
     assertThat(profile.getBlockReason()).isNull();
     assertThat(response.blocked()).isFalse();
     assertThat(response.visible()).isTrue();
+    assertThat(response.blockReason()).isNull();
+  }
+
+  @Test
+  void should_unblockCrew_and_stayHidden_when_noActiveSubscription() {
+    CrewProfile profile = crewProfile();
+    profile.block("Stary powód");
+    when(crewProfileRepository.findById(profile.getId())).thenReturn(Optional.of(profile));
+    when(crewProfileRepository.save(any())).thenReturn(profile);
+    when(crewSubscriptionRepository.existsByCrewProfileIdAndActiveTrueAndExpiresAtAfter(
+            eq(profile.getId()), any(Instant.class)))
+        .thenReturn(false);
+
+    AdminCrewResponse response =
+        service.blockCrew(profile.getId(), new BlockCrewRequest(false, null));
+
+    assertThat(profile.isBlocked()).isFalse();
+    assertThat(profile.isVisible()).isFalse();
+    assertThat(profile.getBlockReason()).isNull();
+    assertThat(response.blocked()).isFalse();
+    assertThat(response.visible()).isFalse();
     assertThat(response.blockReason()).isNull();
   }
 

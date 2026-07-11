@@ -123,10 +123,14 @@ public class CrewProfile {
     this.visible = false;
   }
 
+  /**
+   * Odblokowuje profil — czyści flagę {@code blocked} i powód. Świadomie NIE ustawia {@code
+   * visible}: widoczność wynika z aktywnej subskrypcji, więc jest przeliczana przez warstwę serwisu
+   * (zob. {@code AdminCrewService#blockCrew}), a nie odsłaniana bezwarunkowo.
+   */
   public void unblock() {
     this.blocked = false;
     this.blockReason = null;
-    this.visible = true;
   }
 
   public void addServiceCategory(ServiceCategory category) {

@@ -73,7 +73,6 @@ public class CrewProfileService {
             .voivodeship(req.voivodeship())
             .serviceRadiusKm(req.serviceRadiusKm() != null ? req.serviceRadiusKm() : 50)
             .nip(trimOrNull(req.nip()))
-            .visible(true)
             .serviceCategories(categories)
             .build();
 

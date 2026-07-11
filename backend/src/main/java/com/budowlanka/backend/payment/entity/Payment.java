@@ -71,4 +71,12 @@ public class Payment {
   public void markFailed() {
     this.status = PaymentStatus.FAILED;
   }
+
+  /**
+   * Przepina {@code reference_id} z identyfikatora pakietu (ustawianego przy inicjacji) na
+   * utworzoną subskrypcję/boost po aktywacji płatności (B8 — REM-146).
+   */
+  public void linkActivatedResource(UUID resourceId) {
+    this.referenceId = resourceId;
+  }
 }

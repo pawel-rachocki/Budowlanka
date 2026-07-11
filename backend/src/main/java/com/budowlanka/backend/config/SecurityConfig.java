@@ -54,6 +54,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/categories")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/packages/**")
+                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crew/profiles")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crew/profiles/me")
@@ -80,6 +82,14 @@ public class SecurityConfig {
                     .hasRole("CLIENT")
                     .requestMatchers(HttpMethod.DELETE, "/api/crew/profiles/*/reviews/*")
                     .hasRole("CLIENT")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/listing")
+                    .hasRole("CREW")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/boost")
+                    .hasRole("CREW")
+                    .requestMatchers(HttpMethod.GET, "/api/payments/my")
+                    .hasRole("CREW")
+                    .requestMatchers(HttpMethod.POST, "/api/payments/webhook/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated());
     return http.build();
