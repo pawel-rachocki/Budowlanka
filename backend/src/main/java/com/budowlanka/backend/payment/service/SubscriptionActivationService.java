@@ -106,8 +106,11 @@ public class SubscriptionActivationService {
   }
 
   /**
-   * BOOST: tworzy nowy {@code crew_boosts}. Ranking podchwytuje aktywny boost przez istniejące
-   * {@code @Formula hasActiveBoost} na {@link CrewProfile} — nie dotykamy tu {@code is_visible}.
+   * BOOST: przedłuża aktywny boost ({@code expiresAt = max(now, current) + durationDays}) albo —
+   * gdy jego brak — tworzy nowy. Symetrycznie do {@link #activateListing} (REM-164) — kolejny zakup
+   * stackuje czas zamiast tworzyć równoległe, nakładające się okna. Ranking podchwytuje aktywny
+   * boost przez istniejące {@code @Formula hasActiveBoost} na {@link CrewProfile} — nie dotykamy tu
+   * {@code is_visible}.
    */
   private void activateBoost(Payment payment) {
     CrewProfile crew = payment.getCrewProfile();
@@ -117,21 +120,37 @@ public class SubscriptionActivationService {
             .orElseThrow(PackageNotFoundException::new);
 
     Instant now = Instant.now();
+    Duration duration = Duration.ofDays(pkg.getDurationDays());
+
+    UUID boostId =
+        crewBoostRepository
+            .findFirstByCrewProfileIdAndExpiresAtAfterOrderByExpiresAtDesc(crew.getId(), now)
+            .map(existing -> extendBoost(existing, now, duration))
+            .orElseGet(() -> createBoost(crew, pkg, now, duration));
+
+    payment.linkActivatedResource(boostId);
+    log.info(
+        "Aktywacja BOOST: płatność {} → boost {} dla ekipy {}",
+        payment.getId(),
+        boostId,
+        crew.getId());
+  }
+
+  private UUID extendBoost(CrewBoost existing, Instant now, Duration duration) {
+    Instant base = existing.getExpiresAt().isAfter(now) ? existing.getExpiresAt() : now;
+    existing.extendTo(base.plus(duration));
+    return existing.getId();
+  }
+
+  private UUID createBoost(CrewProfile crew, BoostPackage pkg, Instant now, Duration duration) {
     CrewBoost boost =
         crewBoostRepository.save(
             CrewBoost.builder()
                 .crewProfile(crew)
                 .boostPackage(pkg)
                 .startsAt(now)
-                .expiresAt(now.plus(Duration.ofDays(pkg.getDurationDays())))
+                .expiresAt(now.plus(duration))
                 .build());
-
-    payment.linkActivatedResource(boost.getId());
-    log.info(
-        "Aktywacja BOOST: płatność {} → boost {} dla ekipy {} (do {})",
-        payment.getId(),
-        boost.getId(),
-        crew.getId(),
-        boost.getExpiresAt());
+    return boost.getId();
   }
 }

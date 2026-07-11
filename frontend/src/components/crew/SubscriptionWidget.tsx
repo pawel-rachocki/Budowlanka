@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useMySubscription } from '../../hooks/useMySubscription'
 import { formatDate } from '../../utils/formatDate'
+import { dayLabel, daysUntil } from '../../utils/daysUntil'
 
 interface SubscriptionWidgetProps {
   // Slug profilu — potrzebny do linku „Zobacz profil publiczny" w stanie aktywnym.
@@ -26,7 +27,6 @@ export default function SubscriptionWidget({ slug }: SubscriptionWidgetProps) {
   return (
     <ActiveState
       slug={slug}
-      packageName={subscription.subscription?.packageName ?? null}
       expiresAt={subscription.subscription?.expiresAt ?? null}
       boost={subscription.boost}
     />
@@ -34,14 +34,16 @@ export default function SubscriptionWidget({ slug }: SubscriptionWidgetProps) {
 }
 
 // Aktywna subskrypcja — profil jest widoczny w wyszukiwarce.
+//
+// Nie pokazujemy nazwy pakietu: od REM-164 kolejny zakup „stackuje" czas (max(now, expires) +
+// duration), więc nazwa ostatniego pakietu (np. „30 dni") nie odpowiada realnemu oknu. Źródłem
+// prawdy jest expiresAt — prezentujemy pozostałe dni + datę wygaśnięcia.
 function ActiveState({
   slug,
-  packageName,
   expiresAt,
   boost,
 }: {
   slug: string
-  packageName: string | null
   expiresAt: string | null
   boost: { boostName: string; expiresAt: string } | null
 }) {
@@ -58,10 +60,13 @@ function ActiveState({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-navy-900">Profil jest widoczny</p>
           <p className="mt-0.5 text-sm text-navy-600">
-            {packageName ? (
+            {expiresAt ? (
               <>
-                Pakiet <span className="font-semibold text-navy-800">{packageName}</span>
-                {expiresAt && <> — aktywny do {formatDate(expiresAt)}</>}
+                Aktywny jeszcze{' '}
+                <span className="font-semibold text-navy-800">
+                  {daysUntil(expiresAt)} {dayLabel(daysUntil(expiresAt))}
+                </span>{' '}
+                — do {formatDate(expiresAt)}
               </>
             ) : (
               <>Twój pakiet jest aktywny.</>
@@ -87,8 +92,11 @@ function ActiveState({
         <div className="min-w-0 flex-1 text-navy-700">
           {boost ? (
             <>
-              <span className="font-semibold text-navy-800">{boost.boostName}</span> — wyższe
-              pozycjonowanie do {formatDate(boost.expiresAt)}
+              <span className="font-semibold text-navy-800">
+                Boost aktywny — jeszcze {daysUntil(boost.expiresAt)}{' '}
+                {dayLabel(daysUntil(boost.expiresAt))}
+              </span>{' '}
+              (wyższe pozycjonowanie do {formatDate(boost.expiresAt)})
             </>
           ) : (
             <>Boost nieaktywny — podbij pozycję profilu w wynikach wyszukiwania.</>

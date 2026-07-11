@@ -167,11 +167,17 @@ class SubscriptionActivationServiceTest {
     BoostPackage pkg = Mockito.mock(BoostPackage.class);
     when(pkg.getDurationDays()).thenReturn(7);
     when(boostPackageRepository.findById(packageId)).thenReturn(Optional.of(pkg));
+    when(crewBoostRepository.findFirstByCrewProfileIdAndExpiresAtAfterOrderByExpiresAtDesc(
+            any(), any()))
+        .thenReturn(Optional.empty());
     UUID newBoostId = UUID.randomUUID();
-    CrewBoost savedBoost = Mockito.mock(CrewBoost.class);
-    when(savedBoost.getId()).thenReturn(newBoostId);
-    when(savedBoost.getExpiresAt()).thenReturn(Instant.now().plus(Duration.ofDays(7)));
-    when(crewBoostRepository.save(any(CrewBoost.class))).thenReturn(savedBoost);
+    when(crewBoostRepository.save(any(CrewBoost.class)))
+        .thenAnswer(
+            invocation -> {
+              CrewBoost arg = invocation.getArgument(0);
+              setId(arg, newBoostId);
+              return arg;
+            });
 
     Instant before = Instant.now();
     service.activate(payment);
@@ -186,6 +192,36 @@ class SubscriptionActivationServiceTest {
     assertThat(payment.getReferenceId()).isEqualTo(newBoostId);
     assertThat(crew.isVisible()).isFalse();
     verify(crewSubscriptionRepository, never()).save(any());
+  }
+
+  @Test
+  void should_extendExistingBoost_when_activeBoostExists() {
+    CrewProfile crew = crew(false);
+    Payment payment = boostPayment(crew);
+    BoostPackage pkg = Mockito.mock(BoostPackage.class);
+    when(pkg.getDurationDays()).thenReturn(30);
+    when(boostPackageRepository.findById(packageId)).thenReturn(Optional.of(pkg));
+    Instant currentExpiry = Instant.now().plus(Duration.ofDays(10));
+    CrewBoost existing =
+        CrewBoost.builder()
+            .crewProfile(crew)
+            .startsAt(Instant.now().minus(Duration.ofDays(20)))
+            .expiresAt(currentExpiry)
+            .build();
+    UUID existingId = UUID.randomUUID();
+    setId(existing, existingId);
+    when(crewBoostRepository.findFirstByCrewProfileIdAndExpiresAtAfterOrderByExpiresAtDesc(
+            any(), any()))
+        .thenReturn(Optional.of(existing));
+
+    service.activate(payment);
+
+    // przedłużenie: max(now, currentExpiry) + 30 dni == currentExpiry + 30 dni (bo w przyszłości)
+    assertThat(existing.getExpiresAt())
+        .isCloseTo(currentExpiry.plus(Duration.ofDays(30)), within(10, ChronoUnit.SECONDS));
+    verify(crewBoostRepository, never()).save(any());
+    assertThat(payment.getReferenceId()).isEqualTo(existingId);
+    assertThat(crew.isVisible()).isFalse();
   }
 
   // ── helpers ──────────────────────────────────────────────────────────────

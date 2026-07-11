@@ -39,4 +39,9 @@ public class CrewBoost {
   protected void onCreate() {
     createdAt = Instant.now();
   }
+
+  /** Przedłuża boost do nowej daty wygaśnięcia (stack czasu — REM-164). */
+  public void extendTo(Instant newExpiresAt) {
+    this.expiresAt = newExpiresAt;
+  }
 }
