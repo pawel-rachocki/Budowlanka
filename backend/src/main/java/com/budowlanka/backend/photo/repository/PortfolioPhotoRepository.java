@@ -27,4 +27,6 @@ public interface PortfolioPhotoRepository extends JpaRepository<PortfolioPhoto, 
       @Param("status") ModerationStatus status, Pageable pageable);
 
   long countByCrewProfileId(UUID crewId);
+
+  long countByModerationStatus(ModerationStatus status);
 }

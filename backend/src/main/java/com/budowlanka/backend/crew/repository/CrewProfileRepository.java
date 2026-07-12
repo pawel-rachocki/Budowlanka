@@ -41,6 +41,8 @@ public interface CrewProfileRepository
 
   boolean existsByUserId(UUID userId);
 
+  long countByVisibleTrue();
+
   /**
    * Ukrywa ({@code is_visible=false}) widoczne profile, które nie mają żadnej wciąż aktywnej
    * subskrypcji (rozumianej jako {@code expires_at > now} — zgodnie z decyzją arch. „profil

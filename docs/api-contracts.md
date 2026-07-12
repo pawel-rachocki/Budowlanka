@@ -430,6 +430,29 @@ Response `200`: `PagedResponse<AdminPaymentResponse>`
 - `providerTxId` / `completedAt`: `null` dopóki płatność nie zaksięgowana
 Response `403`: brak roli ADMIN
 
+### GET /api/admin/stats
+Statystyki zbiorcze dla admin dashboardu. Liczone zapytaniami agregującymi na żywo (bez cache).
+Response `200`: `AdminStatsResponse`
+```json
+{
+  "usersByRole": { "CLIENT": 120, "CREW": 45, "ADMIN": 1 },
+  "activeSubscriptions": 32,
+  "totalRevenuePln": 4250.00,
+  "revenueLast30Days": 890.00,
+  "crewsCount": 45,
+  "visibleCrews": 30,
+  "pendingModeration": 7
+}
+```
+- `usersByRole`: liczba użytkowników per rola — mapa zawiera **zawsze** wszystkie trzy klucze (`CLIENT`, `CREW`, `ADMIN`), brakujące role mają wartość `0`
+- `activeSubscriptions`: subskrypcje z `is_active=true` i `expires_at > NOW()`
+- `totalRevenuePln`: suma `payments.amount_pln` dla `status=COMPLETED` (całość, bez odejmowania REFUNDED)
+- `revenueLast30Days`: jak wyżej, ale tylko `completed_at >= NOW() - 30 dni` (okno kroczące)
+- `crewsCount` / `visibleCrews`: wszystkie profile ekip / tylko `is_visible=true`
+- `pendingModeration`: zdjęcia portfolio ze statusem `PENDING`
+Response `401`: brak lub nieprawidłowy token
+Response `403`: brak roli ADMIN
+
 ---
 
 ## Reviews — `/api/crew/profiles/{slug}/reviews`

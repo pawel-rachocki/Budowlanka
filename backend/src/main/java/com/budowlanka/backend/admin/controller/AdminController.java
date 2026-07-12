@@ -2,12 +2,14 @@ package com.budowlanka.backend.admin.controller;
 
 import com.budowlanka.backend.admin.dto.AdminCrewResponse;
 import com.budowlanka.backend.admin.dto.AdminPaymentResponse;
+import com.budowlanka.backend.admin.dto.AdminStatsResponse;
 import com.budowlanka.backend.admin.dto.BlockCrewRequest;
 import com.budowlanka.backend.admin.dto.ModerationDecisionRequest;
 import com.budowlanka.backend.admin.dto.PhotoModerationItemResponse;
 import com.budowlanka.backend.admin.service.AdminCrewService;
 import com.budowlanka.backend.admin.service.AdminModerationService;
 import com.budowlanka.backend.admin.service.AdminPaymentService;
+import com.budowlanka.backend.admin.service.AdminStatsService;
 import com.budowlanka.backend.common.PagedResponse;
 import com.budowlanka.backend.payment.enums.PaymentStatus;
 import com.budowlanka.backend.photo.dto.PhotoResponse;
@@ -35,6 +37,12 @@ public class AdminController {
   private final AdminModerationService adminModerationService;
   private final AdminCrewService adminCrewService;
   private final AdminPaymentService adminPaymentService;
+  private final AdminStatsService adminStatsService;
+
+  @GetMapping("/stats")
+  public AdminStatsResponse stats() {
+    return adminStatsService.getStats();
+  }
 
   @GetMapping("/moderation/photos")
   public PagedResponse<PhotoModerationItemResponse> moderationQueue(

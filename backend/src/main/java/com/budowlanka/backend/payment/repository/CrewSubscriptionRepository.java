@@ -25,6 +25,9 @@ public interface CrewSubscriptionRepository extends JpaRepository<CrewSubscripti
    */
   boolean existsByCrewProfileIdAndActiveTrueAndExpiresAtAfter(UUID crewProfileId, Instant now);
 
+  /** Liczba aktywnych subskrypcji w całym systemie (statystyki admina). */
+  long countByActiveTrueAndExpiresAtAfter(Instant now);
+
   /**
    * Masowo dezaktywuje subskrypcje, które wygasły ({@code expires_at < now}) a wciąż mają flagę
    * {@code is_active=true}. Idempotentne — predykat {@code active=true} pomija już wygaszone.

@@ -1,5 +1,6 @@
 package com.budowlanka.backend.admin;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -329,6 +330,47 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content").isArray())
         .andExpect(jsonPath("$.content[?(@.status != 'COMPLETED')]").doesNotExist());
+  }
+
+  // ---- GET /api/admin/stats ----
+
+  @Test
+  void should_return401_when_statsAccessedByAnonymous() throws Exception {
+    mockMvc.perform(get("/api/admin/stats")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void should_return403_when_statsAccessedByClient() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/stats").header("Authorization", "Bearer " + clientToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_return403_when_statsAccessedByCrew() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/stats").header("Authorization", "Bearer " + crewToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_returnAggregatedStats_when_adminGetsStats() throws Exception {
+    savePayment(PaymentStatus.COMPLETED);
+    savePhoto(crewProfile);
+
+    // Baza jest współdzielona między testami — asercje na dolne ograniczenia, nie dokładne wartości
+    mockMvc
+        .perform(get("/api/admin/stats").header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.usersByRole.CLIENT", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.usersByRole.CREW", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.usersByRole.ADMIN", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.activeSubscriptions").isNumber())
+        .andExpect(jsonPath("$.totalRevenuePln").isNumber())
+        .andExpect(jsonPath("$.revenueLast30Days").isNumber())
+        .andExpect(jsonPath("$.crewsCount", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.visibleCrews", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.pendingModeration", greaterThanOrEqualTo(1)));
   }
 
   // ---- helpers ----
