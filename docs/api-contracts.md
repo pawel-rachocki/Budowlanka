@@ -45,6 +45,17 @@ Dozwolone originy frontendu sterowane property `app.cors.allowed-origins` (lista
 
 ---
 
+## Request ID (cross-cutting)
+
+Każda odpowiedź API zawiera nagłówek `X-Request-Id` — identyfikator żądania do korelacji logów (MDC, klucz `requestId`).
+
+- Klient **może** przysłać własny `X-Request-Id` (dozwolony format: `[A-Za-z0-9._-]{8,64}`) — zostanie użyty i odbity w odpowiedzi.
+- Brak nagłówka lub format niedozwolony (ochrona przed log injection) → serwer generuje UUID.
+- Nagłówek jest na liście `exposedHeaders` CORS — frontend może go odczytać i pokazać przy zgłaszaniu problemu.
+- Id propaguje się do zadań asynchronicznych (np. moderacja zdjęć SightEngine).
+
+---
+
 ## Auth — `/api/auth`
 
 ### POST /api/auth/register
