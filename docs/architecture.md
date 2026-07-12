@@ -24,6 +24,7 @@
 | Tabele czatu od razu | Istnieją od dnia 1, ale API w Fazie 2. Zero migracji strukturalnych później |
 | Refresh token w DB | Możliwość unieważnienia (logout, zmiana hasła). Trade-off: query przy każdym refresh |
 | Nimbus JOSE zamiast jjwt | jjwt 0.12.x niezgodny z Jackson 3.x używanym przez Spring Boot 4.x |
+| CORS origins z env (`CORS_ALLOWED_ORIGINS`) | Dev: default `localhost:5173`. Prod (`application-prod.properties`): brak defaultu — fail-fast przy braku env, nie da się wypuścić proda z originem dev |
 
 ## Dev credentials
 

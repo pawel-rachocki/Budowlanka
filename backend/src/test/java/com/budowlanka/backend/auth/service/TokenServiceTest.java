@@ -43,7 +43,8 @@ class TokenServiceTest {
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, REFRESH_EXPIRATION_MS),
             "http://localhost:8080",
-            true);
+            true,
+            null);
     tokenService = new TokenService(jwtService, refreshTokenRepository, props);
 
     user =

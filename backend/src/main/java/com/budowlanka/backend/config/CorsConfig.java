@@ -1,17 +1,21 @@
 package com.budowlanka.backend.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 public class CorsConfig implements WebMvcConfigurer {
+
+  private final AppProperties properties;
 
   @Override
   public void addCorsMappings(CorsRegistry registry) {
     registry
         .addMapping("/api/**")
-        .allowedOrigins("http://localhost:5173")
+        .allowedOrigins(properties.cors().allowedOrigins().toArray(String[]::new))
         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         .allowedHeaders("*")
         .allowCredentials(true)

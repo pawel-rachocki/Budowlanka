@@ -32,6 +32,19 @@ Response `429`:
 
 ---
 
+## CORS (cross-cutting)
+
+Dozwolone originy frontendu sterowane property `app.cors.allowed-origins` (lista rozdzielona przecinkami, env `CORS_ALLOWED_ORIGINS`). Dotyczy wszystkich ścieżek `/api/**`; `allowCredentials=true` (cookie refresh tokena), preflight cache `maxAge=3600s`.
+
+| Profil | Wartość |
+|---|---|
+| dev (default) | `http://localhost:5173` |
+| prod (`application-prod.properties`) | brak defaultu — wymagany env `CORS_ALLOWED_ORIGINS`, inaczej aplikacja nie wystartuje |
+
+Żądanie z niedozwolonego origina → `403` bez nagłówków CORS.
+
+---
+
 ## Auth — `/api/auth`
 
 ### POST /api/auth/register

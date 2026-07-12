@@ -47,7 +47,8 @@ class AuthServiceVerifyEmailTest {
             new AppProperties.JwtProperties(
                 "test-secret-key-at-least-32-chars!!", 900_000L, 604_800_000L),
             "http://localhost:8080",
-            true);
+            true,
+            null);
     authService =
         new AuthService(
             userRepository,
