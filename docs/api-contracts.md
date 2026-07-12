@@ -14,6 +14,24 @@ Format błędów:
 
 ---
 
+## Rate limiting (cross-cutting)
+
+Limity per-IP (in-memory, Bucket4j). Przekroczenie limitu → `429` z nagłówkiem `Retry-After` (sekundy do odblokowania). Odpowiedzi pod limitem zawierają nagłówek `X-Rate-Limit-Remaining`. Limity konfigurowalne w `application.properties` (`app.rate-limit.*`).
+
+| Endpoint | Limit |
+|---|---|
+| `POST /api/auth/login` | 5/min/IP |
+| `POST /api/auth/register` | 3/min/IP |
+| `POST /api/crew/profiles/{slug}/reviews` | 10/min/IP |
+| `GET /api/crew/profiles` | 60/min/IP |
+
+Response `429`:
+```json
+{ "status": 429, "message": "Zbyt wiele żądań. Spróbuj ponownie później.", "timestamp": "2026-07-12T10:00:00Z" }
+```
+
+---
+
 ## Auth — `/api/auth`
 
 ### POST /api/auth/register

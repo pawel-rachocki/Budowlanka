@@ -2,6 +2,7 @@ package com.budowlanka.backend.config;
 
 import com.budowlanka.backend.auth.filter.JwtAuthFilter;
 import com.budowlanka.backend.auth.service.UserDetailsServiceImpl;
+import com.budowlanka.backend.common.filter.RateLimitFilter;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -31,6 +33,7 @@ public class SecurityConfig {
 
   private final UserDetailsServiceImpl userDetailsService;
   private final JwtAuthFilter jwtAuthFilter;
+  private final RateLimitFilter rateLimitFilter;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,6 +44,9 @@ public class SecurityConfig {
             ex ->
                 ex.authenticationEntryPoint(unauthorizedEntryPoint())
                     .accessDeniedHandler(accessDeniedHandler()))
+        // After CorsFilter so 429 responses carry CORS headers; before JwtAuthFilter so
+        // rate-limited floods skip JWT parsing and DB lookups
+        .addFilterAfter(rateLimitFilter, CorsFilter.class)
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(
             auth ->

@@ -31,6 +31,7 @@
 		<awssdk.version>2.42.41</awssdk.version>
 		<testcontainers.version>1.20.6</testcontainers.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
+		<bucket4j.version>8.14.0</bucket4j.version>
 	</properties>
 
 	<dependencyManagement>
@@ -109,6 +110,15 @@
 			<groupId>com.twelvemonkeys.imageio</groupId>
 			<artifactId>imageio-webp</artifactId>
 			<version>3.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j_jdk17-core</artifactId>
+			<version>${bucket4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
