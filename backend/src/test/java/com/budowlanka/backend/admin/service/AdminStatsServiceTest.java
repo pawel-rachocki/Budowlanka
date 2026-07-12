@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.budowlanka.backend.admin.dto.AdminStatsResponse;
+import com.budowlanka.backend.admin.dto.RevenuePointResponse;
 import com.budowlanka.backend.auth.enums.UserRole;
 import com.budowlanka.backend.auth.repository.UserRepository;
 import com.budowlanka.backend.crew.repository.CrewProfileRepository;
@@ -15,6 +16,8 @@ import com.budowlanka.backend.photo.enums.ModerationStatus;
 import com.budowlanka.backend.photo.repository.PortfolioPhotoRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,6 +115,85 @@ class AdminStatsServiceTest {
     Instant since = sinceCaptor.getValue();
     assertThat(since)
         .isBetween(before.minus(30, ChronoUnit.DAYS), after.minus(30, ChronoUnit.DAYS));
+  }
+
+  // ---- getRevenueTimeline ----
+
+  private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
+
+  @Test
+  void should_fillMissingDaysWithZero_when_someDaysHaveNoRevenue() {
+    LocalDate today = LocalDate.now(WARSAW);
+    when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
+        .thenReturn(
+            List.of(dailyRevenue(today.minusDays(2), "267.00"), dailyRevenue(today, "89.00")));
+
+    List<RevenuePointResponse> timeline = service.getRevenueTimeline(5);
+
+    assertThat(timeline).hasSize(5);
+    assertThat(timeline)
+        .extracting(RevenuePointResponse::date)
+        .containsExactly(
+            today.minusDays(4), today.minusDays(3), today.minusDays(2), today.minusDays(1), today);
+    assertThat(timeline.get(0).amountPln()).isEqualByComparingTo("0.00");
+    assertThat(timeline.get(2).amountPln()).isEqualByComparingTo("267.00");
+    assertThat(timeline.get(3).amountPln()).isEqualByComparingTo("0.00");
+    assertThat(timeline.get(4).amountPln()).isEqualByComparingTo("89.00");
+  }
+
+  @Test
+  void should_returnOnlyZeroPoints_when_noCompletedPayments() {
+    when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
+        .thenReturn(List.of());
+
+    List<RevenuePointResponse> timeline = service.getRevenueTimeline(3);
+
+    assertThat(timeline).hasSize(3);
+    assertThat(timeline)
+        .allSatisfy(point -> assertThat(point.amountPln()).isEqualByComparingTo("0.00"));
+  }
+
+  @Test
+  void should_querySinceStartOfFirstWindowDay_when_computingTimeline() {
+    when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
+        .thenReturn(List.of());
+    int days = 30;
+    Instant expectedBefore =
+        LocalDate.now(WARSAW).minusDays(days - 1L).atStartOfDay(WARSAW).toInstant();
+
+    service.getRevenueTimeline(days);
+
+    Instant expectedAfter =
+        LocalDate.now(WARSAW).minusDays(days - 1L).atStartOfDay(WARSAW).toInstant();
+    ArgumentCaptor<Instant> sinceCaptor = ArgumentCaptor.forClass(Instant.class);
+    verify(paymentRepository).sumCompletedAmountPlnByDaySince(sinceCaptor.capture());
+    // Dwa odczyty zegara na wypadek przejścia przez północ w trakcie testu
+    assertThat(sinceCaptor.getValue()).isBetween(expectedBefore, expectedAfter);
+  }
+
+  @Test
+  void should_returnSinglePoint_when_windowIsOneDay() {
+    when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
+        .thenReturn(List.of());
+
+    List<RevenuePointResponse> timeline = service.getRevenueTimeline(1);
+
+    assertThat(timeline).hasSize(1);
+    assertThat(timeline.get(0).date()).isEqualTo(LocalDate.now(WARSAW));
+  }
+
+  private PaymentRepository.DailyRevenue dailyRevenue(LocalDate day, String amount) {
+    return new PaymentRepository.DailyRevenue() {
+      @Override
+      public LocalDate getDay() {
+        return day;
+      }
+
+      @Override
+      public BigDecimal getAmount() {
+        return new BigDecimal(amount);
+      }
+    };
   }
 
   private UserRepository.RoleCount roleCount(UserRole role, long count) {

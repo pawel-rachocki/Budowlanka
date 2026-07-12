@@ -1,5 +1,7 @@
 package com.budowlanka.backend.admin;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -21,7 +23,13 @@ import com.budowlanka.backend.payment.repository.PaymentRepository;
 import com.budowlanka.backend.photo.entity.PortfolioPhoto;
 import com.budowlanka.backend.photo.enums.ModerationStatus;
 import com.budowlanka.backend.photo.repository.PortfolioPhotoRepository;
+import com.jayway.jsonpath.JsonPath;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -373,7 +381,139 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(jsonPath("$.pendingModeration", greaterThanOrEqualTo(1)));
   }
 
+  // ---- GET /api/admin/stats/revenue ----
+
+  private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
+
+  @Test
+  void should_return401_when_revenueAccessedByAnonymous() throws Exception {
+    mockMvc.perform(get("/api/admin/stats/revenue")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void should_return403_when_revenueAccessedByClient() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/stats/revenue").header("Authorization", "Bearer " + clientToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_return403_when_revenueAccessedByCrew() throws Exception {
+    mockMvc
+        .perform(get("/api/admin/stats/revenue").header("Authorization", "Bearer " + crewToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void should_return30PointsEndingToday_when_daysNotProvided() throws Exception {
+    LocalDate today = LocalDate.now(WARSAW);
+
+    mockMvc
+        .perform(get("/api/admin/stats/revenue").header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(30))
+        .andExpect(jsonPath("$[0].date").value(today.minusDays(29).toString()))
+        .andExpect(jsonPath("$[29].date").value(today.toString()));
+  }
+
+  @Test
+  void should_returnRequestedWindowSize_when_daysProvided() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/admin/stats/revenue")
+                .param("days", "7")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(7));
+  }
+
+  @Test
+  void should_return400_when_daysBelowRange() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/admin/stats/revenue")
+                .param("days", "0")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void should_return400_when_daysAboveRange() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/admin/stats/revenue")
+                .param("days", "366")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void should_groupCompletedPaymentsByDay_when_multiplePaymentsSameDay() throws Exception {
+    // Baza jest współdzielona — asercja na przyrost sumy dzisiejszego dnia, nie wartość dokładną
+    double before = todayRevenue();
+
+    savePaymentWithCompletion(PaymentStatus.COMPLETED, "89.00", Instant.now());
+    savePaymentWithCompletion(PaymentStatus.COMPLETED, "89.00", Instant.now());
+
+    assertThat(todayRevenue() - before).isCloseTo(178.00, within(0.001));
+  }
+
+  @Test
+  void should_ignoreNonCompletedPayments_when_computingRevenue() throws Exception {
+    double before = todayRevenue();
+
+    savePaymentWithCompletion(PaymentStatus.FAILED, "500.00", Instant.now());
+    savePayment(PaymentStatus.PENDING);
+
+    assertThat(todayRevenue() - before).isCloseTo(0.00, within(0.001));
+  }
+
+  @Test
+  void should_excludePaymentsOutsideWindow_when_daysIsOne() throws Exception {
+    savePaymentWithCompletion(
+        PaymentStatus.COMPLETED, "89.00", Instant.now().minus(10, ChronoUnit.DAYS));
+
+    mockMvc
+        .perform(
+            get("/api/admin/stats/revenue")
+                .param("days", "1")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].date").value(LocalDate.now(WARSAW).toString()));
+  }
+
+  private double todayRevenue() throws Exception {
+    String body =
+        mockMvc
+            .perform(
+                get("/api/admin/stats/revenue")
+                    .param("days", "1")
+                    .header("Authorization", "Bearer " + adminToken))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    List<Number> amounts =
+        JsonPath.read(body, "$[?(@.date == '" + LocalDate.now(WARSAW) + "')].amountPln");
+    assertThat(amounts).hasSize(1);
+    return amounts.get(0).doubleValue();
+  }
+
   // ---- helpers ----
+
+  private Payment savePaymentWithCompletion(
+      PaymentStatus status, String amount, Instant completedAt) {
+    return paymentRepository.save(
+        Payment.builder()
+            .crewProfile(crewProfile)
+            .amountPln(new BigDecimal(amount))
+            .paymentProvider("P24")
+            .status(status)
+            .completedAt(completedAt)
+            .paymentType(PaymentType.LISTING)
+            .build());
+  }
 
   private Payment savePayment(PaymentStatus status) {
     return paymentRepository.save(

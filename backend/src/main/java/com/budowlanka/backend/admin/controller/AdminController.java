@@ -6,6 +6,7 @@ import com.budowlanka.backend.admin.dto.AdminStatsResponse;
 import com.budowlanka.backend.admin.dto.BlockCrewRequest;
 import com.budowlanka.backend.admin.dto.ModerationDecisionRequest;
 import com.budowlanka.backend.admin.dto.PhotoModerationItemResponse;
+import com.budowlanka.backend.admin.dto.RevenuePointResponse;
 import com.budowlanka.backend.admin.service.AdminCrewService;
 import com.budowlanka.backend.admin.service.AdminModerationService;
 import com.budowlanka.backend.admin.service.AdminPaymentService;
@@ -15,11 +16,15 @@ import com.budowlanka.backend.payment.enums.PaymentStatus;
 import com.budowlanka.backend.photo.dto.PhotoResponse;
 import com.budowlanka.backend.photo.enums.ModerationStatus;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -32,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Validated
 public class AdminController {
 
   private final AdminModerationService adminModerationService;
@@ -42,6 +48,12 @@ public class AdminController {
   @GetMapping("/stats")
   public AdminStatsResponse stats() {
     return adminStatsService.getStats();
+  }
+
+  @GetMapping("/stats/revenue")
+  public List<RevenuePointResponse> revenueTimeline(
+      @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days) {
+    return adminStatsService.getRevenueTimeline(days);
   }
 
   @GetMapping("/moderation/photos")

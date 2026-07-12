@@ -4,6 +4,7 @@ import com.budowlanka.backend.payment.entity.Payment;
 import com.budowlanka.backend.payment.enums.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,4 +42,23 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
           + "WHERE p.status = com.budowlanka.backend.payment.enums.PaymentStatus.COMPLETED "
           + "AND p.completedAt >= :since")
   BigDecimal sumCompletedAmountPlnSince(@Param("since") Instant since);
+
+  /** Projekcja wyniku {@link #sumCompletedAmountPlnByDaySince} — dzień i suma płatności. */
+  interface DailyRevenue {
+    LocalDate getDay();
+
+    BigDecimal getAmount();
+  }
+
+  // Dzień liczony w strefie Europe/Warsaw — musi być zgodny ze strefą w AdminStatsService.
+  // Dni bez płatności nie mają wiersza w wyniku — wołający dopełnia zerami.
+  @Query(
+      value =
+          "SELECT (p.completed_at AT TIME ZONE 'Europe/Warsaw')::date AS day, "
+              + "SUM(p.amount_pln) AS amount "
+              + "FROM payments p "
+              + "WHERE p.status = 'COMPLETED' AND p.completed_at >= :since "
+              + "GROUP BY day ORDER BY day",
+      nativeQuery = true)
+  List<DailyRevenue> sumCompletedAmountPlnByDaySince(@Param("since") Instant since);
 }

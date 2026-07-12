@@ -453,6 +453,25 @@ Response `200`: `AdminStatsResponse`
 Response `401`: brak lub nieprawidłowy token
 Response `403`: brak roli ADMIN
 
+### GET /api/admin/stats/revenue?days=30
+Szereg czasowy przychodów dla wykresu na admin dashboardzie. Liczone na żywo (bez cache).
+Parametr `days` opcjonalny: liczba dni okna, zakres 1–365, domyślnie 30.
+Response `200`: `List<RevenuePointResponse>`
+```json
+[
+  { "date": "2026-06-30", "amountPln": 0.00 },
+  { "date": "2026-07-01", "amountPln": 267.00 },
+  { "date": "2026-07-02", "amountPln": 89.00 }
+]
+```
+- Okno: ostatnie `days` dni kalendarzowych **włącznie z dzisiaj** (`date >= dziś - (days - 1)`), dni liczone w strefie `Europe/Warsaw`
+- Odpowiedź zawiera **zawsze** dokładnie `days` punktów — dni bez płatności mają `amountPln: 0.00` (front nie dopełnia serii)
+- `amountPln`: suma `payments.amount_pln` dla `status=COMPLETED`, grupowanie po dniu z `completed_at`
+- Sortowanie rosnąco po `date`
+Response `400`: `days` poza zakresem 1–365
+Response `401`: brak lub nieprawidłowy token
+Response `403`: brak roli ADMIN
+
 ---
 
 ## Reviews — `/api/crew/profiles/{slug}/reviews`
