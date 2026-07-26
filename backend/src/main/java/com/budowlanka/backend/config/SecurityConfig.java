@@ -96,6 +96,16 @@ public class SecurityConfig {
                     .hasRole("CREW")
                     .requestMatchers(HttpMethod.POST, "/api/payments/webhook/**")
                     .permitAll()
+                    // Actuator: probe'y i health/info publiczne (health detale gate'owane
+                    // przez management.endpoint.health.show-details=when-authorized + roles=ADMIN).
+                    // Pozostałe endpointy actuatora tylko ADMIN (defense-in-depth — i tak
+                    // niewystawione).
+                    .requestMatchers("/actuator/health/liveness", "/actuator/health/readiness")
+                    .permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+                    .permitAll()
+                    .requestMatchers("/actuator/**")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated());
     return http.build();

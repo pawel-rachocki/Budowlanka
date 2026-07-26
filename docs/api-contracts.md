@@ -56,6 +56,31 @@ Każda odpowiedź API zawiera nagłówek `X-Request-Id` — identyfikator żąda
 
 ---
 
+## Monitoring / Actuator (cross-cutting)
+
+Spring Boot Actuator. Po web wystawione są **tylko** `health` i `info` (`management.endpoints.web.exposure.include=health,info`) — pozostałe endpointy (`metrics`, `env`, `beans`, ...) nie są dostępne → `404` (dla ADMIN) / `401` (anonim). Wszystko pod tym samym portem `8080`.
+
+| Endpoint | Auth | Opis |
+|---|---|---|
+| `GET /actuator/health` | brak (publiczny) | Status agregowany. Anonim i role inne niż ADMIN: sam `{"status":"UP"}`. Zalogowany **ADMIN**: pełne detale (`components.db`, `diskSpace`, `mail`, ...) — `show-details=when-authorized`, `roles=ADMIN`. |
+| `GET /actuator/health/liveness` | brak (publiczny) | Probe „żywotności" dla orchestratora/LB. `UP` = proces działa. Nie zależy od DB (chwilowy problem z bazą nie restartuje aplikacji). |
+| `GET /actuator/health/readiness` | brak (publiczny) | Probe „gotowości". `UP` = aplikacja przyjmuje ruch. Zależy od DB (`readinessState,db`) — gdy Postgres padnie, `503 OUT_OF_SERVICE` i LB przestaje kierować ruch. |
+| `GET /actuator/info` | brak (publiczny) | Metadane buildu (`build.*`: nazwa, wersja, czas builda) generowane przez `spring-boot-maven-plugin` (goal `build-info`). |
+| `GET /actuator/**` (pozostałe) | ADMIN | Niewystawione po web → `404` dla ADMIN, `401` dla anonima. |
+
+`GET /actuator/health` — anonim:
+```json
+{ "status": "UP" }
+```
+`GET /actuator/health` — ADMIN (skrót):
+```json
+{ "status": "UP", "components": { "db": { "status": "UP" }, "diskSpace": { "status": "UP" } } }
+```
+
+Uwaga wdrożeniowa: probe'y muszą być osiągalne przez reverse proxy (nginx) — analogicznie do rate-limitingu za proxy.
+
+---
+
 ## Auth — `/api/auth`
 
 ### POST /api/auth/register

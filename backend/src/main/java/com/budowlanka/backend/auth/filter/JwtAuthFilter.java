@@ -60,7 +60,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
+    // Skip ONLY the liveness/readiness probes — hit frequently by the orchestrator/LB without a
+    // token, so we keep them token-parse-free. /actuator/health and /actuator/info must still be
+    // filtered so an ADMIN's JWT is recognised (health show-details=when-authorized).
     String path = request.getRequestURI();
-    return path.startsWith("/actuator/");
+    return path.equals("/actuator/health/liveness") || path.equals("/actuator/health/readiness");
   }
 }

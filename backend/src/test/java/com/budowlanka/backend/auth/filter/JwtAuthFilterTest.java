@@ -140,11 +140,36 @@ class JwtAuthFilterTest {
   }
 
   @Test
-  void should_returnTrue_shouldNotFilter_when_actuatorPath() throws Exception {
+  void should_returnTrue_shouldNotFilter_when_livenessProbePath() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setRequestURI("/actuator/health/liveness");
+
+    assertThat(filter.shouldNotFilter(request)).isTrue();
+  }
+
+  @Test
+  void should_returnTrue_shouldNotFilter_when_readinessProbePath() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setRequestURI("/actuator/health/readiness");
+
+    assertThat(filter.shouldNotFilter(request)).isTrue();
+  }
+
+  @Test
+  void should_returnFalse_shouldNotFilter_when_healthPath() throws Exception {
+    // /actuator/health must be filtered so an ADMIN token is parsed (show-details=when-authorized)
     MockHttpServletRequest request = new MockHttpServletRequest();
     request.setRequestURI("/actuator/health");
 
-    assertThat(filter.shouldNotFilter(request)).isTrue();
+    assertThat(filter.shouldNotFilter(request)).isFalse();
+  }
+
+  @Test
+  void should_returnFalse_shouldNotFilter_when_infoPath() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setRequestURI("/actuator/info");
+
+    assertThat(filter.shouldNotFilter(request)).isFalse();
   }
 
   @Test

@@ -217,6 +217,14 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				<executions>
+					<!-- Generuje META-INF/build-info.properties (build.* w /actuator/info) -->
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>

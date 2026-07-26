@@ -27,6 +27,7 @@
 | CORS origins z env (`CORS_ALLOWED_ORIGINS`) | Dev: default `localhost:5173`. Prod (`application-prod.properties`): brak defaultu — fail-fast przy braku env, nie da się wypuścić proda z originem dev |
 | Natywny structured logging SB4 zamiast logstash-logback-encoder | `logging.structured.format.console=logstash` (prod) daje JSON z MDC bez dodatkowej zależności; encoder ciągnie Jackson 2.x obok Jacksona 3 z SB4. Dev: plain pattern z `requestId` przez `logging.pattern.correlation` |
 | Request-id: filtr servlet-level (`RequestIdFilter`), nie w security chain | `@Order(HIGHEST_PRECEDENCE)` obejmuje cały security chain — logi z JwtAuthFilter, rate-limit 429 i 401/403 też mają `requestId`. MDC propagowany do `@Async` przez `MdcTaskDecorator` |
+| Actuator: wystawione tylko `health`+`info`, ten sam port 8080 | Minimalna powierzchnia ataku dla MVP na 1 VPS (bez osobnego portu management, który komplikuje nginx/probe'y). `metrics`/`env`/`beans` niedostępne. Detale health `when-authorized` + `roles=ADMIN` — anonim widzi sam status, ADMIN pełne komponenty. Probe'y `liveness`/`readiness` publiczne (dla orchestratora/LB), `readiness` zależy od DB, `liveness` nie. `JwtAuthFilter.shouldNotFilter` pomija tylko ścieżki probe'ów, by token ADMIN był parsowany na `/actuator/health` |
 
 ## Dev credentials
 
