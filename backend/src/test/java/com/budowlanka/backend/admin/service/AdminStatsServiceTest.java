@@ -172,6 +172,19 @@ class AdminStatsServiceTest {
   }
 
   @Test
+  void should_sumAmounts_when_repositoryReturnsDuplicateDays() {
+    LocalDate today = LocalDate.now(WARSAW);
+    when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
+        .thenReturn(List.of(dailyRevenue(today, "89.00"), dailyRevenue(today, "178.00")));
+
+    List<RevenuePointResponse> timeline = service.getRevenueTimeline(2);
+
+    assertThat(timeline).hasSize(2);
+    assertThat(timeline.get(0).amountPln()).isEqualByComparingTo("0.00");
+    assertThat(timeline.get(1).amountPln()).isEqualByComparingTo("267.00");
+  }
+
+  @Test
   void should_returnSinglePoint_when_windowIsOneDay() {
     when(paymentRepository.sumCompletedAmountPlnByDaySince(any(Instant.class)))
         .thenReturn(List.of());

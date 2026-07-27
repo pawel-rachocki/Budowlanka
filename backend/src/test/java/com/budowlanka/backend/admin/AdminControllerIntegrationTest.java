@@ -151,6 +151,118 @@ class AdminControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(status().isForbidden());
   }
 
+  // ---- Flow E2E: decyzja moderatora → publiczna galeria ekipy (REM-172) ----
+
+  @Test
+  void should_appearInPublicGallery_after_adminApprovesPhoto() throws Exception {
+    PortfolioPhoto photo = savePhoto(crewProfile);
+    String publicGallery = "/api/crew/profiles/" + crewProfile.getSlug() + "/photos";
+
+    // PENDING nie wycieka do publicznej galerii
+    mockMvc
+        .perform(get(publicGallery))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[?(@.id == '" + photo.getId() + "')]").doesNotExist());
+
+    mockMvc
+        .perform(
+            put("/api/admin/moderation/photos/" + photo.getId())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"decision\":\"APPROVE\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(get(publicGallery))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].id").value(photo.getId().toString()))
+        // Publicznie nie ujawniamy statusu ani noty moderacyjnej
+        .andExpect(jsonPath("$[0].moderationStatus").value((Object) null))
+        .andExpect(jsonPath("$[0].moderationNote").value((Object) null));
+  }
+
+  @Test
+  void should_stayOutOfPublicGallery_after_adminRejectsPhoto() throws Exception {
+    PortfolioPhoto photo = savePhoto(crewProfile);
+
+    mockMvc
+        .perform(
+            put("/api/admin/moderation/photos/" + photo.getId())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"decision\":\"REJECT\",\"note\":\"Nieodpowiednie treści\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(get("/api/crew/profiles/" + crewProfile.getSlug() + "/photos"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[?(@.id == '" + photo.getId() + "')]").doesNotExist());
+  }
+
+  @Test
+  void should_leaveQueueAndUpdateStats_after_adminApprovesPhoto() throws Exception {
+    PortfolioPhoto photo = savePhoto(crewProfile);
+    long pendingBefore = pendingModerationStat();
+
+    mockMvc
+        .perform(
+            get("/api/admin/moderation/photos")
+                .param("status", "PENDING")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[?(@.id == '" + photo.getId() + "')]").exists());
+
+    mockMvc
+        .perform(
+            put("/api/admin/moderation/photos/" + photo.getId())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"decision\":\"APPROVE\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            get("/api/admin/moderation/photos")
+                .param("status", "PENDING")
+                .header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[?(@.id == '" + photo.getId() + "')]").doesNotExist());
+
+    assertThat(pendingModerationStat()).isEqualTo(pendingBefore - 1);
+  }
+
+  @Test
+  void should_return409_when_moderatingAlreadyDecidedPhoto() throws Exception {
+    PortfolioPhoto photo = savePhoto(crewProfile);
+
+    mockMvc
+        .perform(
+            put("/api/admin/moderation/photos/" + photo.getId())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"decision\":\"APPROVE\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            put("/api/admin/moderation/photos/" + photo.getId())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"decision\":\"REJECT\",\"note\":\"Zmiana decyzji\"}"))
+        .andExpect(status().isConflict());
+  }
+
+  private long pendingModerationStat() throws Exception {
+    String body =
+        mockMvc
+            .perform(get("/api/admin/stats").header("Authorization", "Bearer " + adminToken))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return ((Number) JsonPath.read(body, "$.pendingModeration")).longValue();
+  }
+
   // ---- GET /api/admin/crews — role checks ----
 
   @Test
