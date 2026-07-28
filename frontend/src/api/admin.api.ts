@@ -3,8 +3,10 @@ import type { Page } from '../types/crew.types'
 import type { PhotoResponse, PhotoModerationItem, ModerationStatus } from '../types/photo.types'
 import type {
   AdminCrewResponse,
+  AdminStatsResponse,
   BlockCrewRequest,
   ModerationDecisionRequest,
+  RevenuePointResponse,
 } from '../types/admin.types'
 
 export interface AdminCrewsParams {
@@ -27,4 +29,10 @@ export const adminApi = {
 
   blockCrew: (id: string, body: BlockCrewRequest) =>
     apiClient.put<AdminCrewResponse>(`/admin/crews/${encodeURIComponent(id)}/block`, body),
+
+  getStats: () => apiClient.get<AdminStatsResponse>('/admin/stats'),
+
+  /** @param days okno w dniach, zakres 1–365; pominięty = domyślne 30 z backendu */
+  getRevenue: (days?: number) =>
+    apiClient.get<RevenuePointResponse[]>('/admin/stats/revenue', { params: { days } }),
 }

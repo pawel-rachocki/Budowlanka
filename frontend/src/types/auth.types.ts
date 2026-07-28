@@ -1,3 +1,5 @@
+export type UserRole = 'CLIENT' | 'CREW' | 'ADMIN'
+
 export interface AuthTokens {
   accessToken: string
   tokenType: string
@@ -17,7 +19,7 @@ export interface RegisterRequest {
 export interface User {
   id: string
   email: string
-  role: 'CLIENT' | 'CREW' | 'ADMIN'
+  role: UserRole
 }
 
 export interface AuthContextValue {
